@@ -20,6 +20,14 @@
                         {{ __('Reservasi Saya') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @can('admin')
+                    <flux:sidebar.group :heading="__('Administrator')" class="grid">
+                        <flux:sidebar.item icon="shield-check" :href="route('admin.reservations')" :current="request()->routeIs('admin.reservations')" wire:navigate>
+                            {{ __('Manajemen Reservasi') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endcan
             </flux:sidebar.nav>
 
             <flux:spacer />
