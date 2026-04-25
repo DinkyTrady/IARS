@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             RoomSeeder::class,
             LecturerSeeder::class,
             CourseSeeder::class,
+            AcademicScheduleSeeder::class,
         ]);
     }
 }
