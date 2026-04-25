@@ -1,6 +1,33 @@
-<laravel-boost-guidelines>
-=== foundation rules ===
+<agents-guidelines>
+=== agent rules ===
 
+# Agent Guidelines
+
+## 1. Mandatory Reading
+
+Before starting any implementation or significant task, you MUST read all documents in the `docs/` directory (e.g., `srs-project.md`, `laporand-pdf.md`). These documents contain the research foundation, system requirements (SRS), and the specific logic for the Genetic Algorithm.
+
+## 2. Architecture Overview
+
+- **Framework**: Laravel 12 (Streamlined structure).
+- **Frontend**: Livewire 4 (Reactive components) & Flux UI (Component library).
+- **Styling**: Tailwind CSS v4 (CSS-first configuration).
+- **Authentication**: Laravel Fortify (Headless backend).
+- **Logic Core**:
+    - Room Reservation Management.
+    - Genetic Algorithm (GA) for automated timetabling/conflict resolution.
+    - Multi-role system: Admin (Pengelola) & User (Mahasiswa/Dosen).
+
+## 3. Git Workflow
+
+- Always create a new branch for each feature or bug fix (e.g., `feature/room-crud`, `feature/ga-implementation`).
+- Use descriptive commit messages.
+- Do not commit directly to the main branch.
+
+</agents-guidelines>
+
+=== foundation rules ===
+<laravel-boost-guidelines>
 # Laravel Boost Guidelines
 
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
@@ -119,6 +146,7 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Use appropriate PHP type hints for method parameters.
 
 <!-- Explicit Return Types and Method Params -->
+
 ```php
 protected function isAccessible(User $user, ?string $path = null): bool
 {
