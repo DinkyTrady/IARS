@@ -23,6 +23,9 @@ Before starting any implementation or significant task, you MUST read all docume
 - Always create a new branch for each feature or bug fix (e.g., `feature/room-crud`, `feature/ga-implementation`).
 - Use descriptive commit messages.
 - Do not commit directly to the main branch.
+- If already finish current scope push it to origin
+- If you have github-mcp use it to open the pull requests
+- Do not try to merge it let the persons to merge by himself
 
 </agents-guidelines>
 
