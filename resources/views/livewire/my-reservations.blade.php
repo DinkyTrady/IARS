@@ -2,62 +2,93 @@
 
 use App\Models\Reservation;
 use Livewire\Volt\Component;
+use Livewire\WithPagination;
+use Flux\Flux;
 
 new class extends Component {
+    use WithPagination;
+
+    public string $statusFilter = 'all';
+
     public function with(): array
     {
+        // Mengambil data reservasi khusus milik user yang sedang login
+        $query = Reservation::where('user_id', auth()->id())
+            ->with('room')
+            ->latest();
+
+        if ($this->statusFilter !== 'all') {
+            $query->where('status', $this->statusFilter);
+        }
+
         return [
-            'reservations' => auth()->user()->reservations()->latest()->get(),
+            'reservations' => $query->paginate(10),
         ];
     }
-    
+
     public function cancel(int $id): void
     {
-        $reservation = Reservation::findOrFail($id);
-        
-        if ($reservation->user_id !== auth()->id()) {
-            return;
-        }
-        
+        $reservation = Reservation::where('user_id', auth()->id())->findOrFail($id);
+
+        // Hanya reservasi dengan status 'pending' yang bisa dibatalkan
         if ($reservation->status === 'pending') {
             $reservation->update(['status' => 'canceled']);
-            \Flux\Flux::toast('Reservasi berhasil dibatalkan.', variant: 'success');
+            Flux::toast('Reservasi telah dibatalkan.', variant: 'success');
+        } else {
+            Flux::toast('Hanya reservasi tertunda yang dapat dibatalkan.', variant: 'error');
         }
     }
 }; ?>
 
 <div class="space-y-6">
-    <div>
-        <flux:heading size="xl">Reservasi Saya</flux:heading>
-        <flux:subheading>Daftar pengajuan peminjaman ruangan Anda.</flux:subheading>
+    <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+        <div>
+            <flux:heading size="xl">Riwayat Reservasi Saya</flux:heading>
+            <flux:subheading>Pantau status pengajuan peminjaman ruangan Anda di sini.</flux:subheading>
+        </div>
+
+        <div class="w-full sm:w-48">
+            <flux:select wire:model.live="statusFilter" size="sm" placeholder="Filter Status">
+                <flux:select.option value="all">Semua Status</flux:select.option>
+                <flux:select.option value="pending">Menunggu (Pending)</flux:select.option>
+                <flux:select.option value="approved">Disetujui (Approved)</flux:select.option>
+                <flux:select.option value="rejected">Ditolak (Rejected)</flux:select.option>
+                <flux:select.option value="canceled">Dibatalkan (Canceled)</flux:select.option>
+            </flux:select>
+        </div>
     </div>
 
     <flux:separator variant="subtle" />
 
     <flux:table>
-        <flux:columns>
-            <flux:column>Ruangan</flux:column>
-            <flux:column>Kegiatan</flux:column>
-            <flux:column>Tanggal & Waktu</flux:column>
-            <flux:column>Status</flux:column>
-            <flux:column>Aksi</flux:column>
-        </flux:columns>
+        <flux:table.columns>
+            <flux:table.column>Ruangan</flux:table.column>
+            <flux:table.column>Kegiatan</flux:table.column>
+            <flux:table.column>Waktu</flux:table.column>
+            <flux:table.column>Status</flux:table.column>
+            <flux:table.column>Aksi</flux:table.column>
+        </flux:table.columns>
 
-        <flux:rows>
+        <flux:table.rows>
             @forelse ($reservations as $reservation)
-                <flux:row>
-                    <flux:cell>
-                        <div class="font-medium text-neutral-800">{{ $reservation->room->name }}</div>
+                <flux:table.row>
+                    <flux:table.cell>
+                        <div class="font-medium">{{ $reservation->room->name }}</div>
                         <div class="text-xs text-neutral-500">{{ $reservation->room->building }}</div>
-                    </flux:cell>
-                    <flux:cell>{{ $reservation->activity_name }}</flux:cell>
-                    <flux:cell>
+                    </flux:table.cell>
+                    <flux:table.cell>
+                        <div class="max-w-[200px] truncate" title="{{ $reservation->description }}">
+                            {{ $reservation->activity_name }}
+                        </div>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         <div class="text-sm">{{ \Carbon\Carbon::parse($reservation->date)->format('d M Y') }}</div>
-                        <div class="text-xs text-neutral-500">{{ substr($reservation->start_time, 0, 5) }} - {{ substr($reservation->end_time, 0, 5) }}</div>
-                    </flux:cell>
-                    <flux:cell>
+                        <div class="text-xs text-neutral-500">{{ substr($reservation->start_time, 0, 5) }} -
+                            {{ substr($reservation->end_time, 0, 5) }}</div>
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @php
-                            $color = match($reservation->status) {
+                            $color = match ($reservation->status) {
                                 'approved' => 'green',
                                 'pending' => 'yellow',
                                 'rejected' => 'red',
@@ -66,22 +97,33 @@ new class extends Component {
                             };
                         @endphp
                         <flux:badge color="{{ $color }}" size="sm">{{ ucfirst($reservation->status) }}</flux:badge>
-                    </flux:cell>
-                    <flux:cell>
+
+                        @if ($reservation->status === 'rejected' && $reservation->note)
+                            <div class="text-[10px] text-red-600 mt-1 italic">Ket: {{ $reservation->note }}</div>
+                        @endif
+                    </flux:table.cell>
+                    <flux:table.cell>
                         @if ($reservation->status === 'pending')
-                            <flux:button variant="ghost" size="sm" wire:click="cancel({{ $reservation->id }})" wire:confirm="Apakah Anda yakin ingin membatalkan reservasi ini?">
+                            <flux:button variant="ghost" size="sm" color="red" wire:click="cancel({{ $reservation->id }})"
+                                wire:confirm="Apakah Anda yakin ingin membatalkan reservasi ini?">
                                 Batalkan
                             </flux:button>
+                        @else
+                            <span class="text-xs text-neutral-400 italic">-</span>
                         @endif
-                    </flux:cell>
-                </flux:row>
+                    </flux:table.cell>
+                </flux:table.row>
             @empty
-                <flux:row>
-                    <flux:cell colspan="5" class="text-center py-8 text-neutral-500">
-                        Belum ada data reservasi.
-                    </flux:cell>
-                </flux:row>
+                <flux:table.row>
+                    <flux:table.cell colspan="5" class="text-center py-8 text-neutral-500">
+                        Anda belum memiliki riwayat reservasi.
+                    </flux:table.cell>
+                </flux:table.row>
             @endforelse
-        </flux:rows>
+        </flux:table.rows>
     </flux:table>
+
+    <div class="mt-4">
+        {{ $reservations->links() }}
+    </div>
 </div>
