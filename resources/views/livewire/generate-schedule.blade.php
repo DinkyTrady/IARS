@@ -84,54 +84,44 @@ new class extends Component {
         </div>
     @else
         {{-- Tabel Hasil Generasi Jadwal --}}
-        <flux:table>
-            <flux:table.columns>
-                <flux:table.column>Hari</flux:table.column>
-                <flux:table.column>Waktu</flux:table.column>
-                <flux:table.column>Mata Kuliah</flux:table.column>
-                <flux:table.column>Ruangan</flux:table.column>
-            </flux:table.columns>
+        @php
+            $daftarHari = [
+                1 => 'Senin',
+                2 => 'Selasa',
+                3 => 'Rabu',
+                4 => 'Kamis',
+                5 => 'Jumat'
+            ];
+            // Kelompokkan jadwal berdasarkan hari
+            $groupedSchedules = $schedules->groupBy('day');
+        @endphp
 
-            <flux:table.rows>
-                @foreach ($schedules as $schedule)
-                    <flux:table.row :key="$schedule->id">
-                        <flux:table.cell>
-                            @php
-                                $daftarHari = [
-                                    1 => 'Senin',
-                                    2 => 'Selasa',
-                                    3 => 'Rabu',
-                                    4 => 'Kamis',
-                                    5 => 'Jumat'
-                                ];
-                            @endphp
-                            <span class="font-medium text-neutral-900">{{ $daftarHari[$schedule->day] ?? 'N/A' }}</span>
-                        </flux:table.cell>
-
-                        <flux:table.cell>
-                            <span class="text-sm">
-                                {{ substr($schedule->start_time, 0, 5) }} - {{ substr($schedule->end_time, 0, 5) }}
-                            </span>
-                        </flux:table.cell>
-
-                        <flux:table.cell>
-                            <div class="flex flex-col">
-                                <span class="font-medium text-neutral-900">{{ $schedule->course->name }}</span>
-                                <span class="text-xs text-neutral-500">
-                                    {{ $schedule->course->code }} | {{ $schedule->course->sks }} SKS | Semester
-                                    {{ $schedule->course->semester }}
-                                </span>
-                            </div>
-                        </flux:table.cell>
-
-                        <flux:table.cell>
-                            <flux:badge size="sm" variant="outline" color="blue">
-                                {{ $schedule->room->name }}
-                            </flux:badge>
-                        </flux:table.cell>
-                    </flux:table.row>
-                @endforeach
-            </flux:table.rows>
-        </flux:table>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            @for ($i = 1; $i <= 5; $i++)
+                <div class="flex flex-col border border-neutral-200 rounded-lg overflow-hidden">
+                    <div class="bg-neutral-100 px-4 py-2 font-semibold text-center border-b border-neutral-200">
+                        {{ $daftarHari[$i] }}
+                    </div>
+                    <div class="p-4 flex-1 space-y-3 bg-white">
+                        @if (isset($groupedSchedules[$i]))
+                            @foreach ($groupedSchedules[$i] as $schedule)
+                                <div class="p-3 border border-blue-100 bg-blue-50/50 rounded-md shadow-sm">
+                                    <div class="text-xs font-semibold text-blue-600 mb-1">
+                                        {{ substr($schedule->start_time, 0, 5) }} - {{ substr($schedule->end_time, 0, 5) }}
+                                    </div>
+                                    <div class="font-bold text-sm text-neutral-800 leading-tight mb-2">{{ $schedule->course->name }}</div>
+                                    <div class="text-xs text-neutral-500 mt-1 flex justify-between items-center">
+                                        <span>{{ $schedule->course->sks }} SKS</span>
+                                        <flux:badge size="sm" variant="outline" color="blue">{{ $schedule->room->name }}</flux:badge>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="text-center text-xs text-neutral-400 py-4 italic">Kosong</div>
+                        @endif
+                    </div>
+                </div>
+            @endfor
+        </div>
     @endif
 </div>

@@ -19,12 +19,32 @@
                     <flux:sidebar.item icon="calendar-days" :href="route('reservations.index')" :current="request()->routeIs('reservations.index')" wire:navigate>
                         {{ __('Reservasi Saya') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="plus-circle" :href="route('reservations.create')" :current="request()->routeIs('reservations.create')" wire:navigate>
+                        {{ __('Buat Reservasi') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 @can('admin')
                     <flux:sidebar.group :heading="__('Administrator')" class="grid">
                         <flux:sidebar.item icon="shield-check" :href="route('admin.reservations')" :current="request()->routeIs('admin.reservations')" wire:navigate>
-                            {{ __('Manajemen Reservasi') }}
+                            {{ __('Persetujuan Reservasi') }}
+                        </flux:sidebar.item>
+                        
+                        <flux:sidebar.item icon="building-office" :href="route('admin.rooms')" :current="request()->routeIs('admin.rooms')" wire:navigate>
+                            {{ __('Manajemen Ruangan') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="cpu-chip" :href="route('admin.schedules')" :current="request()->routeIs('admin.schedules')" wire:navigate>
+                            {{ __('Optimasi Jadwal (GA)') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="book-open" :href="route('admin.courses')" :current="request()->routeIs('admin.courses')" wire:navigate>
+                            {{ __('Mata Kuliah') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="users" :href="route('admin.lecturers')" :current="request()->routeIs('admin.lecturers')" wire:navigate>
+                            {{ __('Dosen') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan

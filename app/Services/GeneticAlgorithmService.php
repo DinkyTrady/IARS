@@ -5,31 +5,27 @@ namespace App\Services;
 use App\Models\Course;
 use App\Models\Room;
 use App\Models\Lecturer;
-use App\Models\AcademicSchedule; // <-- Tambahan untuk menyimpan ke DB
+use App\Models\AcademicSchedule;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB; // <-- Tambahan untuk eksekusi penyimpanan
+use Illuminate\Support\Facades\DB;
 
 class GeneticAlgorithmService
 {
     private int $populationSize = 50;
     private int $maxGenerations = 100;
     private float $mutationRate = 0.1;
-
-    // Standar durasi 1 SKS di Indonesia (dalam menit)
     private int $minutesPerSks = 50;
+    private array $allowedStartTimes = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
 
-    // Slot jam mulai perkuliahan yang diperbolehkan di kampus (contoh)
-    private array $allowedStartTimes = [
-        '08:00',
-        '09:00',
-        '10:00',
-        '11:00',
-        '13:00',
-        '14:00',
-        '15:00'
-    ];
+    private $courses;
+    private $rooms;
+    
+    public function __construct()
+    {
+        $this->courses = Course::all()->keyBy('id');
+        $this->rooms = Room::where('status', 'available')->get()->keyBy('id');
+    }
 
-    // MENGUBAH RETURN TYPE MENJADI BOOL (agar sesuai dengan Livewire yang mengecek sukses/gagal)
     public function generateOptimalSchedule(): bool
     {
         $population = $this->initializePopulation();
@@ -38,17 +34,14 @@ class GeneticAlgorithmService
             $fitnessScores = $this->calculateFitness($population);
 
             $bestScore = max($fitnessScores);
-            // Jika tidak ada konflik sama sekali (Score = 1.0)
+            // Nilai maksimum untuk skor tanpa penalti adalah 1 (karena 1 / (1 + 0))
             if ($bestScore === 1.0) {
                 $bestIndex = array_search($bestScore, $fitnessScores);
-
-                // SIMPAN KE DATABASE SEBELUM RETURN
                 $this->saveBestSchedule($population[$bestIndex]);
                 return true;
             }
 
             $newPopulation = [];
-
             while (count($newPopulation) < $this->populationSize) {
                 $parent1 = $this->selection($population, $fitnessScores);
                 $parent2 = $this->selection($population, $fitnessScores);
@@ -58,14 +51,11 @@ class GeneticAlgorithmService
 
                 $newPopulation[] = $offspring;
             }
-
             $population = $newPopulation;
         }
 
         $finalFitness = $this->calculateFitness($population);
         $bestIndex = array_search(max($finalFitness), $finalFitness);
-
-        // SIMPAN KE DATABASE SEBELUM RETURN
         $this->saveBestSchedule($population[$bestIndex]);
         return true;
     }
@@ -73,33 +63,21 @@ class GeneticAlgorithmService
     private function initializePopulation(): array
     {
         $population = [];
-        $courses = Course::all();
-        $rooms = Room::where('status', 'available')->get();
-        // Asumsi perkuliahan: 1 (Senin) s.d 5 (Jumat)
         $days = [1, 2, 3, 4, 5];
 
         for ($i = 0; $i < $this->populationSize; $i++) {
             $chromosome = [];
-
-            foreach ($courses as $course) {
-                // 1. Pilih jam mulai acak dari slot yang diizinkan
+            foreach ($this->courses as $course) {
                 $randomStartTimeString = $this->allowedStartTimes[array_rand($this->allowedStartTimes)];
-
-                // 2. Hitung durasi berdasarkan SKS Mata Kuliah (Dinamis)
                 $durationMinutes = $course->sks * $this->minutesPerSks;
-
-                // 3. Kalkulasi End Time menggunakan Carbon
                 $startTime = Carbon::createFromFormat('H:i', $randomStartTimeString);
                 $endTime = (clone $startTime)->addMinutes($durationMinutes);
-
-                // Asumsi: jika tabel courses belum ada lecturer_id, bisa diambil random untuk testing
-                // Pastikan disesuaikan dengan skema relasi database Anda.
                 $lecturerId = $course->lecturer_id ?? Lecturer::inRandomOrder()->first()?->id ?? 1;
 
                 $chromosome[] = [
                     'course_id' => $course->id,
                     'lecturer_id' => $lecturerId,
-                    'room_id' => $rooms->random()->id,
+                    'room_id' => $this->rooms->random()->id,
                     'day' => $days[array_rand($days)],
                     'start_time' => $startTime->format('H:i:s'),
                     'end_time' => $endTime->format('H:i:s'),
@@ -107,7 +85,6 @@ class GeneticAlgorithmService
             }
             $population[] = $chromosome;
         }
-
         return $population;
     }
 
@@ -116,42 +93,52 @@ class GeneticAlgorithmService
         $scores = [];
 
         foreach ($population as $chromosome) {
-            $conflicts = 0;
+            $penalty = 0;
             $totalGenes = count($chromosome);
 
-            // Membandingkan setiap kelas dengan kelas lainnya dalam 1 jadwal (Kromosom)
             for ($i = 0; $i < $totalGenes; $i++) {
+                $geneA = $chromosome[$i];
+                $courseA = $this->courses[$geneA['course_id']];
+                $roomA = $this->rooms[$geneA['room_id']];
+
+                // 1. HARD CONSTRAINT: Kapasitas Ruangan (-100)
+                if ($courseA->expected_students > $roomA->capacity) {
+                    $penalty += 100;
+                }
+
+                // 2. SOFT CONSTRAINT: Mengajar di Siang/Sore (-5)
+                // Jika mulai di atas atau jam 13:00
+                $startHour = (int) substr($geneA['start_time'], 0, 2);
+                if ($startHour >= 13) {
+                    $penalty += 5;
+                }
+
                 for ($j = $i + 1; $j < $totalGenes; $j++) {
-                    $geneA = $chromosome[$i];
                     $geneB = $chromosome[$j];
 
-                    // Jika hari berbeda, dipastikan tidak ada konflik waktu
                     if ($geneA['day'] !== $geneB['day']) {
                         continue;
                     }
 
-                    // Logika Irisan Waktu (Overlapping)
-                    // Dua kegiatan beririsan JIKA (Start A < End B) DAN (End A > Start B)
                     $startA = strtotime($geneA['start_time']);
                     $endA = strtotime($geneA['end_time']);
                     $startB = strtotime($geneB['start_time']);
                     $endB = strtotime($geneB['end_time']);
 
                     if ($startA < $endB && $endA > $startB) {
-                        // HUKUMAN 1: Ruangan sama dipakai 2 kelas bersamaan
+                        // HARD CONSTRAINT: Ruangan sama bentrok (-100)
                         if ($geneA['room_id'] === $geneB['room_id']) {
-                            $conflicts++;
+                            $penalty += 100;
                         }
-                        // HUKUMAN 2: Dosen sama mengajar 2 kelas berbeda bersamaan
+                        // HARD CONSTRAINT: Dosen sama bentrok (-100)
                         if ($geneA['lecturer_id'] === $geneB['lecturer_id']) {
-                            $conflicts++;
+                            $penalty += 100;
                         }
                     }
                 }
             }
-
-            // Fungsi fitness (Semakin sedikit konflik, nilai mendekati 1)
-            $scores[] = 1 / (1 + $conflicts);
+            // Fitness score
+            $scores[] = 1 / (1 + $penalty);
         }
 
         return $scores;
@@ -168,14 +155,12 @@ class GeneticAlgorithmService
                 $bestIndex = $randomIndex;
             }
         }
-
         return $population[$bestIndex];
     }
 
     private function crossover(array $parent1, array $parent2): array
     {
         $crossoverPoint = rand(1, count($parent1) - 1);
-
         return array_merge(
             array_slice($parent1, 0, $crossoverPoint),
             array_slice($parent2, $crossoverPoint)
@@ -184,16 +169,15 @@ class GeneticAlgorithmService
 
     private function mutate(array $chromosome): array
     {
-        $rooms = Room::where('status', 'available')->pluck('id')->toArray();
         $days = [1, 2, 3, 4, 5];
+        $roomIds = $this->rooms->keys()->toArray();
 
         foreach ($chromosome as &$gene) {
             if (rand(0, 100) / 100 < $this->mutationRate) {
-                // Mutasi hari, ruangan, atau jam (termasuk rekalkulasi SKS)
-                $gene['room_id'] = $rooms[array_rand($rooms)];
+                $gene['room_id'] = $roomIds[array_rand($roomIds)];
                 $gene['day'] = $days[array_rand($days)];
 
-                $course = Course::find($gene['course_id']);
+                $course = $this->courses[$gene['course_id']];
                 $newStartString = $this->allowedStartTimes[array_rand($this->allowedStartTimes)];
 
                 $startTime = Carbon::createFromFormat('H:i', $newStartString);
@@ -203,18 +187,17 @@ class GeneticAlgorithmService
                 $gene['end_time'] = $endTime->format('H:i:s');
             }
         }
-
         return $chromosome;
     }
 
-    // --- FUNGSI BARU UNTUK MENYIMPAN KE DATABASE ---
     private function saveBestSchedule(array $schedule): void
     {
         DB::transaction(function () use ($schedule) {
-            AcademicSchedule::truncate(); // Bersihkan jadwal lama
+            AcademicSchedule::truncate();
             foreach ($schedule as $data) {
                 AcademicSchedule::create([
                     'course_id' => $data['course_id'],
+                    'lecturer_id' => $data['lecturer_id'],
                     'room_id' => $data['room_id'],
                     'day' => $data['day'],
                     'start_time' => $data['start_time'],

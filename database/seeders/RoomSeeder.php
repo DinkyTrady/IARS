@@ -7,43 +7,46 @@ use Illuminate\Database\Seeder;
 
 class RoomSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $rooms = [
-            [
-                'name' => 'Lab Komputer 1',
-                'code' => 'LAB-01',
-                'building' => 'Gedung A',
-                'floor' => 2,
-                'capacity' => 30,
-                'facilities' => json_encode(['AC', 'Projector', 'PCs', 'LAN']),
-                'status' => 'available',
-            ],
-            [
-                'name' => 'Ruang Teori 101',
-                'code' => 'RT-101',
-                'building' => 'Gedung B',
-                'floor' => 1,
-                'capacity' => 40,
-                'facilities' => json_encode(['AC', 'Whiteboard', 'Projector']),
-                'status' => 'available',
-            ],
-            [
-                'name' => 'Aula Utama',
-                'code' => 'AULA-01',
-                'building' => 'Gedung C',
-                'floor' => 1,
-                'capacity' => 200,
-                'facilities' => json_encode(['Sound System', 'AC', 'Stage', 'Projector']),
-                'status' => 'available',
-            ],
-        ];
+        Room::create([
+            'name' => 'Ruang Teori 101',
+            'code' => 'RT-101',
+            'building' => 'Gedung A',
+            'floor' => 1,
+            'capacity' => 40,
+            'facilities' => ['AC', 'Projector', 'Whiteboard'],
+            'status' => 'available',
+        ]);
 
-        foreach ($rooms as $room) {
-            Room::create($room);
-        }
+        Room::create([
+            'name' => 'Ruang Teori 102',
+            'code' => 'RT-102',
+            'building' => 'Gedung A',
+            'floor' => 1,
+            'capacity' => 30,
+            'facilities' => ['AC', 'Projector'],
+            'status' => 'available',
+        ]);
+
+        Room::create([
+            'name' => 'Laboratorium Komputer 1',
+            'code' => 'LAB-01',
+            'building' => 'Gedung B',
+            'floor' => 2,
+            'capacity' => 25,
+            'facilities' => ['AC', 'PC', 'Projector'],
+            'status' => 'available',
+        ]);
+        
+        Room::create([
+            'name' => 'Aula Besar',
+            'code' => 'AULA',
+            'building' => 'Gedung C',
+            'floor' => 1,
+            'capacity' => 100,
+            'facilities' => ['AC', 'Projector', 'Sound System'],
+            'status' => 'available',
+        ]);
     }
 }

@@ -7,40 +7,46 @@ use Illuminate\Database\Seeder;
 
 class CourseSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $courses = [
-            [
-                'name' => 'Pemrograman Web',
-                'code' => 'IF-101',
-                'sks' => 3,
-                'semester' => 4,
-            ],
-            [
-                'name' => 'Basis Data Lanjut',
-                'code' => 'IF-201',
-                'sks' => 3,
-                'semester' => 4,
-            ],
-            [
-                'name' => 'Kecerdasan Buatan',
-                'code' => 'IF-301',
-                'sks' => 4,
-                'semester' => 6,
-            ],
-            [
-                'name' => 'Metodologi Penelitian',
-                'code' => 'IF-401',
-                'sks' => 2,
-                'semester' => 4,
-            ],
-        ];
+        Course::create([
+            'name' => 'Pemrograman Web Lanjut',
+            'code' => 'IF201',
+            'sks' => 3,
+            'semester' => 3,
+            'expected_students' => 35,
+        ]);
 
-        foreach ($courses as $course) {
-            Course::create($course);
-        }
+        Course::create([
+            'name' => 'Kecerdasan Buatan',
+            'code' => 'IF301',
+            'sks' => 3,
+            'semester' => 5,
+            'expected_students' => 45,
+        ]);
+
+        Course::create([
+            'name' => 'Basis Data',
+            'code' => 'IF102',
+            'sks' => 4,
+            'semester' => 2,
+            'expected_students' => 40,
+        ]);
+
+        Course::create([
+            'name' => 'Jaringan Komputer',
+            'code' => 'IF205',
+            'sks' => 3,
+            'semester' => 4,
+            'expected_students' => 30,
+        ]);
+        
+        Course::create([
+            'name' => 'Matematika Diskrit',
+            'code' => 'IF101',
+            'sks' => 2,
+            'semester' => 1,
+            'expected_students' => 50,
+        ]);
     }
 }

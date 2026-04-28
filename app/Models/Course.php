@@ -12,6 +12,7 @@ class Course extends Model
         'code',
         'sks',
         'semester',
+        'expected_students',
     ];
 
     /**
