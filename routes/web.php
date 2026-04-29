@@ -8,6 +8,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::view('reservations', 'reservations')->name('reservations.index');
     Route::view('reservations/create', 'create-reservation-page')->name('reservations.create');
+    Route::view('reservations/schedule', 'reservation-schedule-page')->name('reservations.schedule');
     Route::view('schedules', 'academic-schedule-page')->name('schedules.index');
 
     // Admin Routes
