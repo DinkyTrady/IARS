@@ -24,6 +24,10 @@
                         {{ __('Buat Reservasi') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="calendar" :href="route('reservations.schedule')" :current="request()->routeIs('reservations.schedule')" wire:navigate>
+                        {{ __('Jadwal Reservasi') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="table-cells" :href="route('schedules.index')" :current="request()->routeIs('schedules.index')" wire:navigate>
                         {{ __('Jadwal Perkuliahan') }}
                     </flux:sidebar.item>

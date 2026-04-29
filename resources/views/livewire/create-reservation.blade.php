@@ -70,6 +70,7 @@ new class extends Component {
                     $query->whereTime('start_time', '<', $end->format('H:i:s'))
                           ->whereTime('end_time', '>', $start->format('H:i:s'));
                 })
+                ->with('user') // Eager load untuk pesan yang lebih informatif
                 ->first();
 
             if ($conflictReservation) {
