@@ -7,31 +7,27 @@ use Illuminate\Database\Seeder;
 
 class LecturerSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $lecturers = [
-            [
-                'name' => 'Dosen Pengampu A',
-                'nidn' => '1111111111',
-                'email' => 'dosen.a@example.com',
-            ],
-            [
-                'name' => 'Dosen Pengampu B',
-                'nidn' => '2222222222',
-                'email' => 'dosen.b@example.com',
-            ],
-            [
-                'name' => 'Dosen Pengampu C',
-                'nidn' => '3333333333',
-                'email' => 'dosen.c@example.com',
-            ],
-        ];
+        Lecturer::create([
+            'name' => 'Dr. Andi Saputra, M.Kom',
+            'nidn' => '1234567890',
+            'email' => 'andi@kampus.ac.id',
+            'phone' => '081234567890',
+        ]);
 
-        foreach ($lecturers as $lecturer) {
-            Lecturer::create($lecturer);
-        }
+        Lecturer::create([
+            'name' => 'Prof. Budi Santoso, Ph.D',
+            'nidn' => '0987654321',
+            'email' => 'budi.s@kampus.ac.id',
+            'phone' => '089876543210',
+        ]);
+
+        Lecturer::create([
+            'name' => 'Siti Aminah, M.T',
+            'nidn' => '1122334455',
+            'email' => 'siti.a@kampus.ac.id',
+            'phone' => '085678901234',
+        ]);
     }
 }

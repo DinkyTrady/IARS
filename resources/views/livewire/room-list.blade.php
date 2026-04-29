@@ -2,17 +2,19 @@
 
 use App\Models\Room;
 use App\Models\Reservation;
+use App\Models\AcademicSchedule;
+use Illuminate\Support\Carbon;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Rule;
 use Flux\Flux;
 
 new class extends Component {
     public ?Room $selectedRoom = null;
-    
-    #[Rule('required|string|min:3')]
+
+    #[Rule('required|string|min:3|max:255')]
     public string $activity_name = '';
 
-    #[Rule('required|string')]
+    #[Rule('nullable|string|max:1000')]
     public string $description = '';
 
     #[Rule('required|date|after_or_equal:today')]
@@ -21,62 +23,66 @@ new class extends Component {
     #[Rule('required')]
     public string $start_time = '';
 
-    #[Rule('required|after:start_time')]
+    #[Rule('required')]
     public string $end_time = '';
 
     public function with(): array
     {
         return [
-            'rooms' => Room::all(),
+            'rooms' => Room::where('status', 'available')->get(),
         ];
     }
 
     public function selectRoom(int $roomId): void
     {
         $this->selectedRoom = Room::find($roomId);
+        $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time']);
         $this->modal('reservation-modal')->show();
     }
 
     public function save(): void
     {
-        $this->validate();
+        $this->validate([
+            'activity_name' => 'required|string|min:3|max:255',
+            'description' => 'nullable|string|max:1000',
+            'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+        ]);
 
-        // 1. Check for conflicts with Academic Schedule (Fixed Classes)
-        $dayOfWeek = date('N', strtotime($this->date)); // 1 (Monday) to 7 (Sunday)
-        
-        $academicConflict = \App\Models\AcademicSchedule::where('room_id', $this->selectedRoom->id)
+        $start = Carbon::parse("{$this->date} {$this->start_time}");
+        $end = Carbon::parse("{$this->date} {$this->end_time}");
+
+        // 1. Cek konflik dengan Jadwal Akademik (GA) - metode overlap yang benar
+        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1 = Senin, 5 = Jumat
+
+        $academicConflict = AcademicSchedule::where('room_id', $this->selectedRoom->id)
             ->where('day', $dayOfWeek)
-            ->where(function ($query) {
-                $query->whereBetween('start_time', [$this->start_time, $this->end_time])
-                      ->orWhereBetween('end_time', [$this->start_time, $this->end_time])
-                      ->orWhere(function ($q) {
-                          $q->where('start_time', '<=', $this->start_time)
-                            ->where('end_time', '>=', $this->end_time);
-                      });
+            ->where(function ($query) use ($start, $end) {
+                // Overlap terjadi jika: start_A < end_B AND end_A > start_B
+                $query->whereTime('start_time', '<', $end->format('H:i:s'))
+                      ->whereTime('end_time', '>', $start->format('H:i:s'));
             })
-            ->exists();
+            ->first();
 
         if ($academicConflict) {
-            $this->addError('start_time', 'Ruangan sedang digunakan untuk jadwal perkuliahan tetap.');
+            $this->addError('start_time', 'Ruangan sedang digunakan untuk jadwal perkuliahan: ' . $academicConflict->course->name);
             return;
         }
 
-        // 2. Check for conflicts with other Reservations
+        // 2. Cek konflik dengan Reservasi lain (pending/approved)
         $reservationConflict = Reservation::where('room_id', $this->selectedRoom->id)
             ->where('date', $this->date)
-            ->where('status', '!=', 'rejected') // Ignore rejected reservations
-            ->where(function ($query) {
-                $query->whereBetween('start_time', [$this->start_time, $this->end_time])
-                      ->orWhereBetween('end_time', [$this->start_time, $this->end_time])
-                      ->orWhere(function ($q) {
-                          $q->where('start_time', '<=', $this->start_time)
-                            ->where('end_time', '>=', $this->end_time);
-                      });
+            ->whereIn('status', ['pending', 'approved'])
+            ->where(function ($query) use ($start, $end) {
+                // Overlap terjadi jika: start_A < end_B AND end_A > start_B
+                $query->whereTime('start_time', '<', $end->format('H:i:s'))
+                      ->whereTime('end_time', '>', $start->format('H:i:s'));
             })
-            ->exists();
+            ->first();
 
         if ($reservationConflict) {
-            $this->addError('start_time', 'Ruangan sudah dipesan pada waktu tersebut.');
+            $this->addError('start_time', 'Ruangan sudah dipesan pada jam tersebut (Status: ' . ucfirst($reservationConflict->status) . ')');
             return;
         }
 
@@ -84,19 +90,18 @@ new class extends Component {
             'user_id' => auth()->id(),
             'room_id' => $this->selectedRoom->id,
             'activity_name' => $this->activity_name,
-            'description' => $this->description,
+            'description' => $this->description ?: null,
             'date' => $this->date,
-            'start_time' => $this->start_time,
-            'end_time' => $this->end_time,
+            'start_time' => $start->format('H:i:s'),
+            'end_time' => $end->format('H:i:s'),
             'status' => 'pending',
         ]);
 
         $this->modal('reservation-modal')->close();
-        
         $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time', 'selectedRoom']);
-        
+
         Flux::toast(
-            text: 'Reservasi berhasil diajukan dan menunggu persetujuan admin.',
+            text: 'Reservasi berhasil diajukan! Menunggu persetujuan admin.',
             variant: 'success',
         );
     }
@@ -104,14 +109,14 @@ new class extends Component {
 
 <div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @foreach ($rooms as $room)
-            <flux:card class="flex flex-col gap-4">
+        @forelse ($rooms as $room)
+            <flux:card wire:key="{{ $room->id }}" class="flex flex-col gap-4">
                 <div class="flex justify-between items-start">
                     <div>
                         <flux:heading size="lg">{{ $room->name }}</flux:heading>
-                        <flux:subheading>{{ $room->building }} - Lantai {{ $room->floor }}</flux:subheading>
+                        <flux:subheading>{{ $room->building }} — Lantai {{ $room->floor }}</flux:subheading>
                     </div>
-                    <flux:badge color="{{ $room->status === 'available' ? 'green' : 'red' }}" size="sm" inset="top">{{ ucfirst($room->status) }}</flux:badge>
+                    <flux:badge color="green" size="sm" inset="top">Tersedia</flux:badge>
                 </div>
 
                 <div class="flex items-center gap-2 text-sm text-neutral-500">
@@ -119,11 +124,13 @@ new class extends Component {
                     <span>Kapasitas: {{ $room->capacity }} orang</span>
                 </div>
 
-                <div class="flex flex-wrap gap-1">
-                    @foreach ($room->facilities as $facility)
-                        <flux:badge variant="outline" size="sm">{{ $facility }}</flux:badge>
-                    @endforeach
-                </div>
+                @if(!empty($room->facilities))
+                    <div class="flex flex-wrap gap-1">
+                        @foreach ($room->facilities as $facility)
+                            <flux:badge variant="outline" size="sm">{{ $facility }}</flux:badge>
+                        @endforeach
+                    </div>
+                @endif
 
                 <flux:spacer />
 
@@ -131,7 +138,13 @@ new class extends Component {
                     Reservasi Sekarang
                 </flux:button>
             </flux:card>
-        @endforeach
+        @empty
+            <div class="col-span-3 flex flex-col items-center justify-center py-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
+                <flux:icon.building-office-2 class="mb-4 text-neutral-400" size="xl" />
+                <flux:heading>Tidak Ada Ruangan Tersedia</flux:heading>
+                <flux:subheading>Semua ruangan sedang tidak tersedia saat ini. Hubungi admin untuk informasi lebih lanjut.</flux:subheading>
+            </div>
+        @endforelse
     </div>
 
     <flux:modal name="reservation-modal" class="md:w-[500px]">
@@ -139,25 +152,27 @@ new class extends Component {
             @if ($selectedRoom)
                 <div>
                     <flux:heading size="lg">Reservasi {{ $selectedRoom->name }}</flux:heading>
-                    <flux:subheading>Isi detail kegiatan untuk mengajukan peminjaman ruangan.</flux:subheading>
+                    <flux:subheading>
+                        {{ $selectedRoom->building }}, Lantai {{ $selectedRoom->floor }} · Kapasitas {{ $selectedRoom->capacity }} orang
+                    </flux:subheading>
                 </div>
 
                 <form wire:submit="save" class="space-y-4">
                     <flux:field>
-                        <flux:label>Nama Kegiatan</flux:label>
-                        <flux:input wire:model="activity_name" placeholder="Contoh: Rapat Himpunan" />
+                        <flux:label>Nama Kegiatan <flux:badge size="sm" variant="outline">Wajib</flux:badge></flux:label>
+                        <flux:input wire:model="activity_name" placeholder="Contoh: Rapat Himpunan, Seminar..." />
                         <flux:error name="activity_name" />
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>Deskripsi</flux:label>
-                        <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan..." />
+                        <flux:label>Deskripsi Kegiatan</flux:label>
+                        <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan (opsional)..." rows="2" />
                         <flux:error name="description" />
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>Tanggal</flux:label>
-                        <flux:input type="date" wire:model="date" />
+                        <flux:label>Tanggal <flux:badge size="sm" variant="outline">Wajib</flux:badge></flux:label>
+                        <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" />
                         <flux:error name="date" />
                     </flux:field>
 
@@ -175,11 +190,13 @@ new class extends Component {
                         </flux:field>
                     </div>
 
-                    <div class="flex justify-end gap-2">
+                    <div class="flex justify-end gap-2 pt-2">
                         <flux:modal.close>
                             <flux:button variant="ghost">Batal</flux:button>
                         </flux:modal.close>
-                        <flux:button type="submit" variant="primary">Ajukan Reservasi</flux:button>
+                        <flux:button type="submit" variant="primary">
+                            Ajukan Reservasi
+                        </flux:button>
                     </div>
                 </form>
             @endif
