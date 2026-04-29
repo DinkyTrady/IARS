@@ -10,27 +10,27 @@ use Flux\Flux;
 
 new class extends Component {
     #[Validate('required|exists:rooms,id')]
-    public $room_id;
+    public ?int $room_id = null;
 
-    #[Validate('required|string|max:255')]
-    public $activity_name;
+    #[Validate('required|string|min:3|max:255')]
+    public string $activity_name = '';
 
-    #[Validate('nullable|string')]
-    public $description;
+    #[Validate('nullable|string|max:1000')]
+    public string $description = '';
 
     #[Validate('required|date|after_or_equal:today')]
-    public $date;
+    public string $date = '';
 
     #[Validate('required|date_format:H:i')]
-    public $start_time;
+    public string $start_time = '';
 
     #[Validate('required|date_format:H:i|after:start_time')]
-    public $end_time;
+    public string $end_time = '';
 
     public function with(): array
     {
         return [
-            'rooms' => Room::where('status', 'available')->get(),
+            'rooms' => Room::where('status', 'available')->orderBy('name')->get(),
         ];
     }
 
@@ -38,40 +38,40 @@ new class extends Component {
     {
         $this->validate();
 
-        $start = Carbon::parse($this->start_time);
-        $end = Carbon::parse($this->end_time);
-        
-        // Cek Konflik dengan Reservasi Lain yang sudah di-approve
-        $conflictReservation = Reservation::where('room_id', $this->room_id)
-            ->where('date', $this->date)
-            ->whereIn('status', ['approved', 'pending']) // Jangan biarkan numpuk di pending juga
-            ->where(function ($query) use ($start, $end) {
-                $query->where(function ($q) use ($start, $end) {
-                    $q->whereTime('start_time', '<', $end->format('H:i:s'))
-                      ->whereTime('end_time', '>', $start->format('H:i:s'));
-                });
-            })
-            ->first();
+        $start = Carbon::createFromFormat('H:i', $this->start_time);
+        $end = Carbon::createFromFormat('H:i', $this->end_time);
 
-        if ($conflictReservation) {
-            $this->addError('start_time', 'Ruangan sudah di-booking pada jam tersebut (Status: ' . $conflictReservation->status . ')');
-            $this->addError('end_time', 'Ruangan sudah di-booking.');
-            return;
-        }
+        // 1. Cek konflik Jadwal Akademik (GA)
+        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1=Senin, 5=Jumat
 
-        // Cek Konflik dengan Jadwal Akademik (GA)
-        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1 = Senin, 5 = Jumat
         $conflictSchedule = AcademicSchedule::where('room_id', $this->room_id)
             ->where('day', $dayOfWeek)
             ->where(function ($query) use ($start, $end) {
+                // Overlap: start_A < end_B AND end_A > start_B
+                $query->whereTime('start_time', '<', $end->format('H:i:s'))
+                      ->whereTime('end_time', '>', $start->format('H:i:s'));
+            })
+            ->with('course')
+            ->first();
+
+        if ($conflictSchedule) {
+            $this->addError('start_time', "Ruangan bentrok dengan jadwal perkuliahan: {$conflictSchedule->course->name} ({$conflictSchedule->start_time} - {$conflictSchedule->end_time})");
+            return;
+        }
+
+        // 2. Cek konflik dengan Reservasi lain (pending/approved)
+        $conflictReservation = Reservation::where('room_id', $this->room_id)
+            ->where('date', $this->date)
+            ->whereIn('status', ['approved', 'pending'])
+            ->where(function ($query) use ($start, $end) {
+                // Overlap: start_A < end_B AND end_A > start_B
                 $query->whereTime('start_time', '<', $end->format('H:i:s'))
                       ->whereTime('end_time', '>', $start->format('H:i:s'));
             })
             ->first();
 
-        if ($conflictSchedule) {
-            $this->addError('start_time', 'Bentrok dengan Jadwal Perkuliahan: ' . $conflictSchedule->course->name);
-            $this->addError('end_time', 'Silakan pilih jam atau ruangan lain.');
+        if ($conflictReservation) {
+            $this->addError('start_time', "Ruangan sudah dipesan ({$conflictReservation->start_time} - {$conflictReservation->end_time}). Pilih jam atau ruangan lain.");
             return;
         }
 
@@ -79,50 +79,92 @@ new class extends Component {
             'user_id' => auth()->id(),
             'room_id' => $this->room_id,
             'activity_name' => $this->activity_name,
-            'description' => $this->description,
+            'description' => $this->description ?: null,
             'date' => $this->date,
             'start_time' => $start->format('H:i:s'),
             'end_time' => $end->format('H:i:s'),
             'status' => 'pending',
         ]);
 
-        Flux::toast('Pengajuan pemesanan berhasil! Menunggu persetujuan admin.', variant: 'success');
-        $this->redirectRoute('reservations.index');
+        Flux::toast('Pengajuan berhasil! Menunggu persetujuan admin.', variant: 'success');
+        $this->redirectRoute('reservations.index', navigate: true);
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6 max-w-2xl mx-auto">
     <header>
-        <flux:heading size="xl">Buat Pesanan Ruangan</flux:heading>
-        <flux:subheading>Pastikan mengecek ketersediaan jadwal agar tidak terjadi konflik.</flux:subheading>
+        <div class="flex items-center gap-3 mb-1">
+            <flux:button variant="ghost" size="sm" icon="arrow-left" href="{{ route('dashboard') }}" wire:navigate />
+            <flux:heading size="xl">Buat Reservasi Ruangan</flux:heading>
+        </div>
+        <flux:subheading class="ml-11">Sistem akan memeriksa konflik jadwal secara otomatis sebelum reservasi diajukan.</flux:subheading>
     </header>
 
     <flux:separator variant="subtle" />
 
-    <form wire:submit="save" class="max-w-2xl space-y-6">
-        <flux:input wire:model="activity_name" label="Nama Kegiatan" placeholder="Contoh: Rapat BEM" required />
-        
-        <flux:textarea wire:model="description" label="Deskripsi Kegiatan" placeholder="Penjelasan singkat..." />
+    <form wire:submit="save" class="space-y-6">
+        <flux:card class="space-y-4">
+            <flux:heading size="md">Detail Kegiatan</flux:heading>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <flux:select wire:model="room_id" label="Pilih Ruangan" required>
-                <flux:select.option value="">Pilih...</flux:select.option>
-                @foreach ($rooms as $room)
-                    <flux:select.option value="{{ $room->id }}">{{ $room->name }} (Kapasitas: {{ $room->capacity }})</flux:select.option>
-                @endforeach
-            </flux:select>
-            
-            <flux:input type="date" wire:model="date" label="Tanggal" required />
-        </div>
+            <flux:field>
+                <flux:label>Nama Kegiatan</flux:label>
+                <flux:input wire:model="activity_name" placeholder="Contoh: Rapat BEM, Seminar Teknik..." required />
+                <flux:error name="activity_name" />
+            </flux:field>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <flux:input type="time" wire:model="start_time" label="Jam Mulai" required />
-            <flux:input type="time" wire:model="end_time" label="Jam Selesai" required />
-        </div>
+            <flux:field>
+                <flux:label>Deskripsi Kegiatan <flux:badge size="sm" variant="ghost">Opsional</flux:badge></flux:label>
+                <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan Anda..." rows="3" />
+                <flux:error name="description" />
+            </flux:field>
+        </flux:card>
 
-        <div class="flex space-x-2 pt-4">
-            <flux:button type="submit" variant="primary">Ajukan Pesanan</flux:button>
-            <flux:button href="{{ route('reservations.index') }}">Batal</flux:button>
+        <flux:card class="space-y-4">
+            <flux:heading size="md">Ruangan & Waktu</flux:heading>
+
+            <flux:field>
+                <flux:label>Pilih Ruangan</flux:label>
+                <flux:select wire:model="room_id" required>
+                    <flux:select.option value="">-- Pilih Ruangan --</flux:select.option>
+                    @foreach ($rooms as $room)
+                        <flux:select.option value="{{ $room->id }}">
+                            {{ $room->name }} — {{ $room->building }}, Lt.{{ $room->floor }} (Kapasitas: {{ $room->capacity }})
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="room_id" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>Tanggal</flux:label>
+                <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" required />
+                <flux:error name="date" />
+            </flux:field>
+
+            <div class="grid grid-cols-2 gap-4">
+                <flux:field>
+                    <flux:label>Jam Mulai</flux:label>
+                    <flux:input type="time" wire:model="start_time" required />
+                    <flux:error name="start_time" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Jam Selesai</flux:label>
+                    <flux:input type="time" wire:model="end_time" required />
+                    <flux:error name="end_time" />
+                </flux:field>
+            </div>
+        </flux:card>
+
+        <flux:callout variant="info" icon="information-circle">
+            <flux:callout.text class="text-sm">
+                Reservasi Anda akan masuk ke antrian <strong>menunggu persetujuan admin</strong>. Pastikan data sudah benar sebelum diajukan.
+            </flux:callout.text>
+        </flux:callout>
+
+        <div class="flex gap-3 justify-end">
+            <flux:button variant="ghost" href="{{ route('dashboard') }}" wire:navigate>Batal</flux:button>
+            <flux:button type="submit" variant="primary" icon="check">Ajukan Reservasi</flux:button>
         </div>
     </form>
 </div>

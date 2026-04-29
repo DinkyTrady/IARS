@@ -28,15 +28,12 @@ new class extends Component {
 
     public function cancel(int $id): void
     {
-        $reservation = Reservation::where('user_id', auth()->id())->findOrFail($id);
+        $reservation = Reservation::findOrFail($id);
 
-        // Hanya reservasi dengan status 'pending' yang bisa dibatalkan
-        if ($reservation->status === 'pending') {
-            $reservation->update(['status' => 'canceled']);
-            Flux::toast('Reservasi telah dibatalkan.', variant: 'success');
-        } else {
-            Flux::toast('Hanya reservasi tertunda yang dapat dibatalkan.', variant: 'error');
-        }
+        $this->authorize('cancel', $reservation);
+
+        $reservation->update(['status' => 'canceled']);
+        Flux::toast('Reservasi telah dibatalkan.', variant: 'success');
     }
 }; ?>
 
@@ -71,7 +68,7 @@ new class extends Component {
 
         <flux:table.rows>
             @forelse ($reservations as $reservation)
-                <flux:table.row>
+                <flux:table.row wire:key="{{ $reservation->id }}">
                     <flux:table.cell>
                         <div class="font-medium">{{ $reservation->room->name }}</div>
                         <div class="text-xs text-neutral-500">{{ $reservation->room->building }}</div>
@@ -82,7 +79,7 @@ new class extends Component {
                         </div>
                     </flux:table.cell>
                     <flux:table.cell>
-                        <div class="text-sm">{{ \Carbon\Carbon::parse($reservation->date)->format('d M Y') }}</div>
+                        <div class="text-sm">{{ $reservation->date->format('d M Y') }}</div>
                         <div class="text-xs text-neutral-500">{{ substr($reservation->start_time, 0, 5) }} -
                             {{ substr($reservation->end_time, 0, 5) }}</div>
                     </flux:table.cell>

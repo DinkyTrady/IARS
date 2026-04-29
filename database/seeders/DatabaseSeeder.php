@@ -14,8 +14,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             RoomSeeder::class,
+            LecturerSeeder::class, // Harus sebelum CourseSeeder
             CourseSeeder::class,
-            LecturerSeeder::class,
         ]);
     }
 }

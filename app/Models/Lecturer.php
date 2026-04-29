@@ -21,4 +21,12 @@ class Lecturer extends Model
     {
         return $this->hasMany(AcademicSchedule::class);
     }
+
+    /**
+     * Get courses assigned to this lecturer.
+     */
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class);
+    }
 }

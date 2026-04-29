@@ -2,24 +2,29 @@
 
 namespace App\Services;
 
-use App\Models\Course;
-use App\Models\Room;
-use App\Models\Lecturer;
 use App\Models\AcademicSchedule;
+use App\Models\Course;
+use App\Models\Lecturer;
+use App\Models\Room;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class GeneticAlgorithmService
 {
     private int $populationSize = 50;
+
     private int $maxGenerations = 100;
+
     private float $mutationRate = 0.1;
+
     private int $minutesPerSks = 50;
+
     private array $allowedStartTimes = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
 
     private $courses;
+
     private $rooms;
-    
+
     public function __construct()
     {
         $this->courses = Course::all()->keyBy('id');
@@ -38,6 +43,7 @@ class GeneticAlgorithmService
             if ($bestScore === 1.0) {
                 $bestIndex = array_search($bestScore, $fitnessScores);
                 $this->saveBestSchedule($population[$bestIndex]);
+
                 return true;
             }
 
@@ -57,6 +63,7 @@ class GeneticAlgorithmService
         $finalFitness = $this->calculateFitness($population);
         $bestIndex = array_search(max($finalFitness), $finalFitness);
         $this->saveBestSchedule($population[$bestIndex]);
+
         return true;
     }
 
@@ -64,6 +71,7 @@ class GeneticAlgorithmService
     {
         $population = [];
         $days = [1, 2, 3, 4, 5];
+        $defaultLecturerId = Lecturer::inRandomOrder()->first()?->id ?? 1;
 
         for ($i = 0; $i < $this->populationSize; $i++) {
             $chromosome = [];
@@ -72,7 +80,9 @@ class GeneticAlgorithmService
                 $durationMinutes = $course->sks * $this->minutesPerSks;
                 $startTime = Carbon::createFromFormat('H:i', $randomStartTimeString);
                 $endTime = (clone $startTime)->addMinutes($durationMinutes);
-                $lecturerId = $course->lecturer_id ?? Lecturer::inRandomOrder()->first()?->id ?? 1;
+
+                // Gunakan lecturer_id yang sudah di-assign ke course, atau fallback ke random
+                $lecturerId = $course->lecturer_id ?? $defaultLecturerId;
 
                 $chromosome[] = [
                     'course_id' => $course->id,
@@ -85,6 +95,7 @@ class GeneticAlgorithmService
             }
             $population[] = $chromosome;
         }
+
         return $population;
     }
 
@@ -155,12 +166,14 @@ class GeneticAlgorithmService
                 $bestIndex = $randomIndex;
             }
         }
+
         return $population[$bestIndex];
     }
 
     private function crossover(array $parent1, array $parent2): array
     {
         $crossoverPoint = rand(1, count($parent1) - 1);
+
         return array_merge(
             array_slice($parent1, 0, $crossoverPoint),
             array_slice($parent2, $crossoverPoint)
@@ -187,6 +200,7 @@ class GeneticAlgorithmService
                 $gene['end_time'] = $endTime->format('H:i:s');
             }
         }
+
         return $chromosome;
     }
 
