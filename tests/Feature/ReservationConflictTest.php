@@ -116,7 +116,8 @@ describe('User mengajukan reservasi', function () {
         $reservation = Reservation::where('activity_name', 'Rapat UKM')->first();
         expect($reservation)->not->toBeNull();
         expect($reservation->status)->toBe('pending');
-        expect($reservation->note)->toContain('Peringatan Sistem');
+        expect($reservation->note)->not->toBeNull()
+            ->and($reservation->note)->toContain('Peringatan Sistem');
     });
 
 });
