@@ -40,7 +40,15 @@ new class extends Component {
         @endif
     </div>
 
-    <flux:table>
+    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5 mt-4">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <flux:icon.clock class="text-white/80" />
+                Data Terbaru
+            </h3>
+        </div>
+        <div class="p-2 sm:p-4 overflow-x-auto">
+            <flux:table>
         <flux:table.columns>
             <flux:table.column>Pemohon</flux:table.column>
             <flux:table.column>Ruangan</flux:table.column>
@@ -52,7 +60,7 @@ new class extends Component {
 
         <flux:table.rows>
             @forelse ($recentReservations as $reservation)
-                <flux:table.row wire:key="{{ $reservation->id }}">
+                <flux:table.row wire:key="{{ $reservation->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
                     <flux:table.cell>
                         <div class="font-medium text-sm">{{ $reservation->user->name }}</div>
                         <div class="text-xs text-neutral-400">{{ $reservation->user->email }}</div>
@@ -98,5 +106,7 @@ new class extends Component {
                 </flux:table.row>
             @endforelse
         </flux:table.rows>
-    </flux:table>
+            </flux:table>
+        </div>
+    </div>
 </div>

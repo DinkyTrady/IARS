@@ -103,7 +103,7 @@ new class extends Component {
     <header>
         <div class="flex items-center gap-3 mb-1">
             <flux:button variant="ghost" size="sm" icon="arrow-left" href="{{ route('dashboard') }}" wire:navigate />
-            <flux:heading size="xl">Buat Reservasi Ruangan</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Buat Reservasi Ruangan</flux:heading>
         </div>
         <flux:subheading class="ml-11">Sistem akan memeriksa konflik jadwal secara otomatis sebelum reservasi diajukan.</flux:subheading>
     </header>
@@ -111,58 +111,70 @@ new class extends Component {
     <flux:separator variant="subtle" />
 
     <form wire:submit="save" class="space-y-6">
-        <flux:card class="space-y-4">
-            <flux:heading size="md">Detail Kegiatan</flux:heading>
-
-            <flux:field>
-                <flux:label>Nama Kegiatan</flux:label>
-                <flux:input wire:model="activity_name" placeholder="Contoh: Rapat BEM, Seminar Teknik..." required />
-                <flux:error name="activity_name" />
-            </flux:field>
-
-            <flux:field>
-                <flux:label>Deskripsi Kegiatan <flux:badge size="sm" variant="ghost">Opsional</flux:badge></flux:label>
-                <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan Anda..." rows="3" />
-                <flux:error name="description" />
-            </flux:field>
-        </flux:card>
-
-        <flux:card class="space-y-4">
-            <flux:heading size="md">Ruangan & Waktu</flux:heading>
-
-            <flux:field>
-                <flux:label>Pilih Ruangan</flux:label>
-                <flux:select wire:model="room_id" required>
-                    <flux:select.option value="">-- Pilih Ruangan --</flux:select.option>
-                    @foreach ($rooms as $room)
-                        <flux:select.option value="{{ $room->id }}">
-                            {{ $room->name }} — {{ $room->building }}, Lt.{{ $room->floor }} (Kapasitas: {{ $room->capacity }})
-                        </flux:select.option>
-                    @endforeach
-                </flux:select>
-                <flux:error name="room_id" />
-            </flux:field>
-
-            <flux:field>
-                <flux:label>Tanggal</flux:label>
-                <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" required />
-                <flux:error name="date" />
-            </flux:field>
-
-            <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <flux:icon.document-text class="text-white/80 size-5" />
+                    Detail Kegiatan
+                </h3>
+            </div>
+            <div class="p-6 space-y-4 bg-blue-50/10">
                 <flux:field>
-                    <flux:label>Jam Mulai</flux:label>
-                    <flux:input type="time" wire:model="start_time" required />
-                    <flux:error name="start_time" />
+                    <flux:label>Nama Kegiatan</flux:label>
+                    <flux:input wire:model="activity_name" placeholder="Contoh: Rapat BEM, Seminar Teknik..." required />
+                    <flux:error name="activity_name" />
                 </flux:field>
-
+    
                 <flux:field>
-                    <flux:label>Jam Selesai</flux:label>
-                    <flux:input type="time" wire:model="end_time" required />
-                    <flux:error name="end_time" />
+                    <flux:label>Deskripsi Kegiatan <flux:badge size="sm" variant="ghost">Opsional</flux:badge></flux:label>
+                    <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan Anda..." rows="3" />
+                    <flux:error name="description" />
                 </flux:field>
             </div>
-        </flux:card>
+        </div>
+
+        <div class="bg-white border border-purple-100 shadow-lg shadow-purple-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-purple-900/10 hover:-translate-y-0.5">
+            <div class="bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-4 border-b border-purple-100 flex items-center justify-between">
+                <h3 class="font-bold text-white flex items-center gap-2">
+                    <flux:icon.clock class="text-white/80 size-5" />
+                    Ruangan & Waktu
+                </h3>
+            </div>
+            <div class="p-6 space-y-4 bg-purple-50/10">
+                <flux:field>
+                    <flux:label>Pilih Ruangan</flux:label>
+                    <flux:select wire:model="room_id" required>
+                        <flux:select.option value="">-- Pilih Ruangan --</flux:select.option>
+                        @foreach ($rooms as $room)
+                            <flux:select.option value="{{ $room->id }}">
+                                {{ $room->name }} — {{ $room->building }}, Lt.{{ $room->floor }} (Kapasitas: {{ $room->capacity }})
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="room_id" />
+                </flux:field>
+    
+                <flux:field>
+                    <flux:label>Tanggal</flux:label>
+                    <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" required />
+                    <flux:error name="date" />
+                </flux:field>
+    
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Jam Mulai</flux:label>
+                        <flux:input type="time" wire:model="start_time" required />
+                        <flux:error name="start_time" />
+                    </flux:field>
+    
+                    <flux:field>
+                        <flux:label>Jam Selesai</flux:label>
+                        <flux:input type="time" wire:model="end_time" required />
+                        <flux:error name="end_time" />
+                    </flux:field>
+                </div>
+            </div>
+        </div>
 
         <flux:callout variant="info" icon="information-circle">
             <flux:callout.text class="text-sm">

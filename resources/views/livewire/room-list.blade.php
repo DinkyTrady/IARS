@@ -110,7 +110,8 @@ new class extends Component {
 <div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @forelse ($rooms as $room)
-            <flux:card wire:key="{{ $room->id }}" class="flex flex-col gap-4">
+            <flux:card wire:key="{{ $room->id }}" class="flex flex-col gap-4 border border-blue-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                 <div class="flex justify-between items-start">
                     <div>
                         <flux:heading size="lg">{{ $room->name }}</flux:heading>
@@ -127,7 +128,7 @@ new class extends Component {
                 @if(!empty($room->facilities))
                     <div class="flex flex-wrap gap-1">
                         @foreach ($room->facilities as $facility)
-                            <flux:badge variant="outline" size="sm">{{ $facility }}</flux:badge>
+                            <flux:badge color="blue" size="sm">{{ $facility }}</flux:badge>
                         @endforeach
                     </div>
                 @endif

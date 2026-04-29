@@ -3,7 +3,13 @@
         {{-- Header --}}
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <flux:heading size="xl">Selamat Datang, {{ auth()->user()->name }}!</flux:heading>
+                @if(auth()->user()->role === 'admin')
+                    <h1 class="text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">
+                        Selamat Datang, <span class="text-blue-700 font-black">{{ auth()->user()->name }}</span>
+                    </h1>
+                @else
+                    <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Selamat Datang, {{ auth()->user()->name }}!</flux:heading>
+                @endif
                 <flux:subheading>
                     @if(auth()->user()->role === 'admin')
                         Panel kontrol sistem informasi reservasi ruangan kampus.

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-white">
+        <flux:sidebar sticky collapsible class="bg-zinc-800 border-e border-zinc-800 text-zinc-100">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
@@ -127,5 +127,45 @@
         {{ $slot }}
 
         @fluxScripts
+
+        <style>
+    /* 1. Targetkan elemen utama sidebar item */
+    /* Flux biasanya me-render ini sebagai elemen yang memiliki atribut data-flux-sidebar-item */
+    [data-flux-sidebar-item], 
+    flux\:sidebar\.item {
+        color: #94a3b8 !important; /* slate-400 */
+        margin-bottom: 2px !important;
+        transition: all 0.2s ease-in-out !important;
+        display: flex; /* Memastikan padding/background terisi penuh */
+    }
+    
+    /* 2. Hover Effect - Abu-abu terang agar kontras dengan bg-zinc-800 */
+    [data-flux-sidebar-item]:hover,
+    flux\:sidebar\.item:hover {
+        background-color: #4b5563 !important; /* gray-600 atau gunakan #3f3f46 untuk zinc-700 */
+        color: #ffffff !important;
+        transform: translateX(4px);
+        border-radius: 8px;
+    }
+    
+    /* 3. Active State (Saat menu dipilih) */
+    [data-flux-sidebar-item][current],
+    flux\:sidebar\.item[current] {
+        background-color: #2563eb !important; /* blue-600 */
+        color: white !important;
+    }
+
+    /* 4. Perbaikan Heading */
+    [data-flux-sidebar-group] h2, 
+    flux\:sidebar\.group h2 {
+        color: #818cf8 !important; /* indigo-400 agar lebih terbaca di dark mode */
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        font-size: 0.7rem !important;
+        margin-top: 1.5rem !important;
+        padding-left: 0.5rem;
+    }
+</style>
     </body>
 </html>

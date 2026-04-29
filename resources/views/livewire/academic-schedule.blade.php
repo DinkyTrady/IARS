@@ -25,7 +25,7 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Jadwal Perkuliahan</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Jadwal Perkuliahan</flux:heading>
             <flux:subheading>Lihat jadwal akademik resmi yang telah disusun oleh sistem.</flux:subheading>
         </div>
         <flux:select wire:model.live="selectedDay" class="w-full sm:w-48" size="sm">
@@ -57,10 +57,12 @@ new class extends Component {
                 <div>
                     <div class="flex items-center gap-3 mb-3">
                         <h3 class="font-semibold text-lg text-neutral-800">{{ $daftarHari[$day] ?? '-' }}</h3>
-                        <flux:badge size="sm" variant="outline">{{ $daySchedules->count() }} kelas</flux:badge>
+                        <flux:badge size="sm" color="blue">{{ $daySchedules->count() }} kelas</flux:badge>
                     </div>
 
-                    <flux:table>
+                    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+                        <div class="p-2 sm:p-4 overflow-x-auto">
+                            <flux:table>
                         <flux:table.columns>
                             <flux:table.column>Waktu</flux:table.column>
                             <flux:table.column>Mata Kuliah</flux:table.column>
@@ -71,7 +73,7 @@ new class extends Component {
 
                         <flux:table.rows>
                             @foreach ($daySchedules as $schedule)
-                                <flux:table.row wire:key="{{ $schedule->id }}">
+                                <flux:table.row wire:key="{{ $schedule->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
                                     <flux:table.cell>
                                         <span class="font-mono text-sm font-medium text-blue-700">
                                             {{ substr($schedule->start_time, 0, 5) }} – {{ substr($schedule->end_time, 0, 5) }}
@@ -82,7 +84,7 @@ new class extends Component {
                                         <div class="text-xs text-neutral-400">{{ $schedule->course->code }}</div>
                                     </flux:table.cell>
                                     <flux:table.cell>
-                                        <flux:badge variant="outline" size="sm">{{ $schedule->course->sks }} SKS</flux:badge>
+                                        <flux:badge color="violet" size="sm">{{ $schedule->course->sks }} SKS</flux:badge>
                                     </flux:table.cell>
                                     <flux:table.cell class="text-sm">
                                         {{ $schedule->lecturer?->name ?? '-' }}
@@ -95,6 +97,8 @@ new class extends Component {
                             @endforeach
                         </flux:table.rows>
                     </flux:table>
+                        </div>
+                    </div>
                 </div>
             @endforeach
         </div>
