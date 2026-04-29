@@ -31,9 +31,18 @@ new class extends Component {
     public function approve(int $id): void
     {
         $reservation = Reservation::findOrFail($id);
+
+        $service = new \App\Services\GeneticAlgorithmService();
+        $canResolve = $service->resolveConflictForReservation($reservation);
+
+        if (! $canResolve) {
+            Flux::toast('Gagal menyetujui. Reservasi bentrok dan tidak ada slot kosong untuk memindahkan jadwal kuliah yang tergusur.', variant: 'error');
+            return;
+        }
+
         $reservation->update(['status' => 'approved']);
 
-        Flux::toast('Reservasi telah disetujui.', variant: 'success');
+        Flux::toast('Reservasi telah disetujui. Jadwal akademik disesuaikan otomatis jika ada bentrok.', variant: 'success');
     }
 
     public function openRejectModal(int $id): void

@@ -41,6 +41,8 @@ new class extends Component {
         $start = Carbon::createFromFormat('H:i', $this->start_time);
         $end = Carbon::createFromFormat('H:i', $this->end_time);
 
+        $note = null;
+
         // 1. Cek konflik Jadwal Akademik (GA)
         $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1=Senin, 5=Jumat
 
@@ -55,24 +57,24 @@ new class extends Component {
             ->first();
 
         if ($conflictSchedule) {
-            $this->addError('start_time', "Ruangan bentrok dengan jadwal perkuliahan: {$conflictSchedule->course->name} ({$conflictSchedule->start_time} - {$conflictSchedule->end_time})");
-            return;
+            $note = "Peringatan Sistem: Ruangan bentrok dengan jadwal perkuliahan {$conflictSchedule->course->name} ({$conflictSchedule->start_time} - {$conflictSchedule->end_time}).";
         }
 
         // 2. Cek konflik dengan Reservasi lain (pending/approved)
-        $conflictReservation = Reservation::where('room_id', $this->room_id)
-            ->where('date', $this->date)
-            ->whereIn('status', ['approved', 'pending'])
-            ->where(function ($query) use ($start, $end) {
-                // Overlap: start_A < end_B AND end_A > start_B
-                $query->whereTime('start_time', '<', $end->format('H:i:s'))
-                      ->whereTime('end_time', '>', $start->format('H:i:s'));
-            })
-            ->first();
+        if (! $note) {
+            $conflictReservation = Reservation::where('room_id', $this->room_id)
+                ->where('date', $this->date)
+                ->whereIn('status', ['approved', 'pending'])
+                ->where(function ($query) use ($start, $end) {
+                    // Overlap: start_A < end_B AND end_A > start_B
+                    $query->whereTime('start_time', '<', $end->format('H:i:s'))
+                          ->whereTime('end_time', '>', $start->format('H:i:s'));
+                })
+                ->first();
 
-        if ($conflictReservation) {
-            $this->addError('start_time', "Ruangan sudah dipesan ({$conflictReservation->start_time} - {$conflictReservation->end_time}). Pilih jam atau ruangan lain.");
-            return;
+            if ($conflictReservation) {
+                $note = "Peringatan Sistem: Ruangan bentrok dengan reservasi '{$conflictReservation->activity_name}' ({$conflictReservation->start_time} - {$conflictReservation->end_time}).";
+            }
         }
 
         Reservation::create([
@@ -84,9 +86,15 @@ new class extends Component {
             'start_time' => $start->format('H:i:s'),
             'end_time' => $end->format('H:i:s'),
             'status' => 'pending',
+            'note' => $note,
         ]);
 
-        Flux::toast('Pengajuan berhasil! Menunggu persetujuan admin.', variant: 'success');
+        if ($note) {
+            Flux::toast('Pengajuan berhasil dengan catatan bentrok. Menunggu peninjauan khusus admin.', variant: 'warning');
+        } else {
+            Flux::toast('Pengajuan berhasil! Menunggu persetujuan admin.', variant: 'success');
+        }
+        
         $this->redirectRoute('reservations.index', navigate: true);
     }
 }; ?>
