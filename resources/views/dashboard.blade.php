@@ -25,10 +25,10 @@
             <flux:separator variant="subtle" />
         @endif
 
-        {{-- Room List --}}
+        {{-- Content --}}
         <div class="flex-1 overflow-y-auto">
             @if(auth()->user()->role !== 'admin')
-                <livewire:room-list />
+                <livewire:mahasiswa-dashboard />
             @else
                 <livewire:admin-recent-reservations />
             @endif
