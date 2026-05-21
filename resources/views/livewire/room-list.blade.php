@@ -5,65 +5,64 @@ use App\Models\Reservation;
 use App\Models\AcademicSchedule;
 use Illuminate\Support\Carbon;
 use Livewire\Volt\Component;
-use Livewire\Attributes\Rule;
+use Livewire\Attributes\Validate;
 use Flux\Flux;
 
 new class extends Component {
-    public ?Room $selectedRoom = null;
+    public ?int $selectedRoomId = null;
 
-    #[Rule('required|string|min:3|max:255')]
+    #[Validate('required|string|min:3|max:255')]
     public string $activity_name = '';
 
-    #[Rule('nullable|string|max:1000')]
+    #[Validate('nullable|string|max:1000')]
     public string $description = '';
 
-    #[Rule('required|date|after_or_equal:today')]
+    #[Validate('required|date|after_or_equal:today')]
     public string $date = '';
 
-    #[Rule('required')]
+    #[Validate('required|date_format:H:i')]
     public string $start_time = '';
 
-    #[Rule('required')]
+    #[Validate('required|date_format:H:i|after:start_time')]
     public string $end_time = '';
 
     public function with(): array
     {
         return [
-            'rooms' => Room::where('status', 'available')->get(),
+            'rooms' => Room::where('status', 'available')->orderBy('name')->get(),
         ];
     }
 
     public function selectRoom(int $roomId): void
     {
-        $this->selectedRoom = Room::find($roomId);
+        $this->selectedRoomId = $roomId;
         $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time']);
         $this->modal('reservation-modal')->show();
     }
 
     public function save(): void
     {
-        $this->validate([
-            'activity_name' => 'required|string|min:3|max:255',
-            'description' => 'nullable|string|max:1000',
-            'date' => 'required|date|after_or_equal:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-        ]);
+        $this->validate();
+
+        $room = Room::find($this->selectedRoomId);
+        if (!$room) {
+            return;
+        }
 
         $start = Carbon::parse("{$this->date} {$this->start_time}");
         $end = Carbon::parse("{$this->date} {$this->end_time}");
 
         $note = null;
 
-        // 1. Cek konflik dengan Jadwal Akademik (GA) - sistem longgar, tidak langsung tolak
-        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1 = Senin, 5 = Jumat
+        // 1. Cek konflik dengan Jadwal Akademik (GA)
+        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso;
 
-        $academicConflict = AcademicSchedule::where('room_id', $this->selectedRoom->id)
+        $academicConflict = AcademicSchedule::where('room_id', $room->id)
             ->where('day', $dayOfWeek)
             ->where(function ($query) use ($start, $end) {
-                // Overlap terjadi jika: start_A < end_B AND end_A > start_B
-                $query->whereTime('start_time', '<', $end->format('H:i:s'))
-                      ->whereTime('end_time', '>', $start->format('H:i:s'));
+                // Gunakan perbandingan string langsung agar sepenuhnya kompatibel dengan SQLite dan PostgreSQL
+                $query->where('start_time', '<', $end->format('H:i:s'))
+                      ->where('end_time', '>', $start->format('H:i:s'));
             })
             ->with('course')
             ->first();
@@ -74,13 +73,12 @@ new class extends Component {
 
         // 2. Cek konflik dengan Reservasi lain (pending/approved)
         if (! $note) {
-            $reservationConflict = Reservation::where('room_id', $this->selectedRoom->id)
-                ->where('date', $this->date)
+            $reservationConflict = Reservation::where('room_id', $room->id)
+                ->whereDate('date', $this->date)
                 ->whereIn('status', ['pending', 'approved'])
                 ->where(function ($query) use ($start, $end) {
-                    // Overlap terjadi jika: start_A < end_B AND end_A > start_B
-                    $query->whereTime('start_time', '<', $end->format('H:i:s'))
-                          ->whereTime('end_time', '>', $start->format('H:i:s'));
+                    $query->where('start_time', '<', $end->format('H:i:s'))
+                          ->where('end_time', '>', $start->format('H:i:s'));
                 })
                 ->first();
 
@@ -91,7 +89,7 @@ new class extends Component {
 
         Reservation::create([
             'user_id' => auth()->id(),
-            'room_id' => $this->selectedRoom->id,
+            'room_id' => $room->id,
             'activity_name' => $this->activity_name,
             'description' => $this->description ?: null,
             'date' => $this->date,
@@ -102,7 +100,7 @@ new class extends Component {
         ]);
 
         $this->modal('reservation-modal')->close();
-        $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time', 'selectedRoom']);
+        $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time', 'selectedRoomId']);
 
         if ($note) {
             Flux::toast('Pengajuan berhasil dengan catatan bentrok. Menunggu peninjauan khusus admin.', variant: 'warning');
@@ -113,98 +111,113 @@ new class extends Component {
 }; ?>
 
 <div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse ($rooms as $room)
-            <flux:card wire:key="{{ $room->id }}" class="flex flex-col gap-4 border border-blue-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                <div class="flex justify-between items-start">
+            <div wire:key="{{ $room->id }}" class="flex flex-col gap-4 border-2 border-zinc-200 bg-white p-5 rounded-2xl relative overflow-hidden transition-all duration-300 hover:border-blue-600 hover:bg-zinc-50/10">
+                {{-- Decorative Solid Top Border Accent --}}
+                <div class="absolute left-0 right-0 top-0 h-1 bg-blue-600"></div>
+
+                <div class="flex justify-between items-start pt-1">
                     <div>
-                        <flux:heading size="lg">{{ $room->name }}</flux:heading>
-                        <flux:subheading>{{ $room->building }} — Lantai {{ $room->floor }}</flux:subheading>
+                        <h4 class="font-extrabold text-zinc-900 text-lg tracking-tight">{{ $room->name }}</h4>
+                        <p class="text-xs text-zinc-500 font-semibold mt-0.5">{{ $room->building }} · Lantai {{ $room->floor }}</p>
                     </div>
-                    <flux:badge color="green" size="sm" inset="top">Tersedia</flux:badge>
+                    <flux:badge color="green" size="sm" class="font-bold text-[10px] uppercase tracking-wider py-0.5 px-2">Tersedia</flux:badge>
                 </div>
 
-                <div class="flex items-center gap-2 text-sm text-neutral-500">
-                    <flux:icon.users variant="mini" />
-                    <span>Kapasitas: {{ $room->capacity }} orang</span>
+                <div class="flex items-center gap-2 text-xs text-zinc-500 font-semibold border-t border-b border-zinc-100 py-3 my-1">
+                    <flux:icon.users variant="mini" class="text-zinc-400" />
+                    <span>Kapasitas: <strong class="text-zinc-800 font-bold">{{ $room->capacity }}</strong> orang</span>
                 </div>
 
                 @if(!empty($room->facilities))
-                    <div class="flex flex-wrap gap-1">
+                    <div class="flex flex-wrap gap-1.5">
                         @foreach ($room->facilities as $facility)
-                            <flux:badge color="blue" size="sm">{{ $facility }}</flux:badge>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-700 border border-zinc-200 uppercase tracking-wide">
+                                {{ $facility }}
+                            </span>
                         @endforeach
                     </div>
                 @endif
 
                 <flux:spacer />
 
-                <flux:button variant="primary" class="w-full" wire:click="selectRoom({{ $room->id }})">
+                <flux:button 
+                    variant="ghost" 
+                    class="w-full border-2 border-zinc-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white font-extrabold text-xs tracking-wide uppercase transition-all duration-200 py-2.5 rounded-xl cursor-pointer" 
+                    wire:click="selectRoom({{ $room->id }})"
+                >
                     Reservasi Sekarang
                 </flux:button>
-            </flux:card>
+            </div>
         @empty
-            <div class="col-span-3 flex flex-col items-center justify-center py-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
-                <flux:icon.building-office-2 class="mb-4 text-neutral-400" size="xl" />
-                <flux:heading>Tidak Ada Ruangan Tersedia</flux:heading>
-                <flux:subheading>Semua ruangan sedang tidak tersedia saat ini. Hubungi admin untuk informasi lebih lanjut.</flux:subheading>
+            <div class="col-span-3 flex flex-col items-center justify-center py-20 bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200">
+                <flux:icon.building-office-2 class="mb-4 text-zinc-400 size-12" />
+                <h4 class="font-extrabold text-zinc-900 text-lg">Tidak Ada Ruangan Tersedia</h4>
+                <p class="text-sm text-zinc-500 font-medium mt-1">Semua ruangan sedang digunakan atau dinonaktifkan saat ini.</p>
             </div>
         @endforelse
     </div>
 
     <flux:modal name="reservation-modal" class="md:w-[500px]">
         <div class="space-y-6">
-            @if ($selectedRoom)
-                <div>
-                    <flux:heading size="lg">Reservasi {{ $selectedRoom->name }}</flux:heading>
-                    <flux:subheading>
-                        {{ $selectedRoom->building }}, Lantai {{ $selectedRoom->floor }} · Kapasitas {{ $selectedRoom->capacity }} orang
-                    </flux:subheading>
-                </div>
+            @if ($selectedRoomId)
+                @php
+                    $selectedRoom = App\Models\Room::find($selectedRoomId);
+                @endphp
+                @if ($selectedRoom)
+                    <div>
+                        <h3 class="text-xl font-extrabold text-zinc-900 tracking-tight">Reservasi {{ $selectedRoom->name }}</h3>
+                        <p class="text-xs text-zinc-500 font-semibold mt-1">
+                            {{ $selectedRoom->building }}, Lantai {{ $selectedRoom->floor }} · Kapasitas {{ $selectedRoom->capacity }} orang
+                        </p>
+                    </div>
 
-                <form wire:submit="save" class="space-y-4">
-                    <flux:field>
-                        <flux:label>Nama Kegiatan <flux:badge size="sm" variant="outline">Wajib</flux:badge></flux:label>
-                        <flux:input wire:model="activity_name" placeholder="Contoh: Rapat Himpunan, Seminar..." />
-                        <flux:error name="activity_name" />
-                    </flux:field>
+                    <flux:separator variant="subtle" class="-my-2" />
 
-                    <flux:field>
-                        <flux:label>Deskripsi Kegiatan</flux:label>
-                        <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan (opsional)..." rows="2" />
-                        <flux:error name="description" />
-                    </flux:field>
-
-                    <flux:field>
-                        <flux:label>Tanggal <flux:badge size="sm" variant="outline">Wajib</flux:badge></flux:label>
-                        <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" />
-                        <flux:error name="date" />
-                    </flux:field>
-
-                    <div class="grid grid-cols-2 gap-4">
+                    <form wire:submit="save" class="space-y-4">
                         <flux:field>
-                            <flux:label>Jam Mulai</flux:label>
-                            <flux:input type="time" wire:model="start_time" />
-                            <flux:error name="start_time" />
+                            <flux:label class="font-bold text-zinc-700">Nama Kegiatan <flux:badge size="sm" variant="ghost" class="text-red-600 bg-red-50 font-bold border-none ml-1">Wajib</flux:badge></flux:label>
+                            <flux:input wire:model="activity_name" placeholder="Contoh: Rapat Himpunan, Seminar Teknik..." class="rounded-xl border-zinc-200" required />
+                            <flux:error name="activity_name" />
                         </flux:field>
 
                         <flux:field>
-                            <flux:label>Jam Selesai</flux:label>
-                            <flux:input type="time" wire:model="end_time" />
-                            <flux:error name="end_time" />
+                            <flux:label class="font-bold text-zinc-700">Deskripsi Kegiatan</flux:label>
+                            <flux:textarea wire:model="description" placeholder="Jelaskan detail kegiatan (opsional)..." rows="3" class="rounded-xl border-zinc-200" />
+                            <flux:error name="description" />
                         </flux:field>
-                    </div>
 
-                    <div class="flex justify-end gap-2 pt-2">
-                        <flux:modal.close>
-                            <flux:button variant="ghost">Batal</flux:button>
-                        </flux:modal.close>
-                        <flux:button type="submit" variant="primary">
-                            Ajukan Reservasi
-                        </flux:button>
-                    </div>
-                </form>
+                        <flux:field>
+                            <flux:label class="font-bold text-zinc-700">Tanggal <flux:badge size="sm" variant="ghost" class="text-red-600 bg-red-50 font-bold border-none ml-1">Wajib</flux:badge></flux:label>
+                            <flux:input type="date" wire:model="date" min="{{ date('Y-m-d') }}" class="rounded-xl border-zinc-200" required />
+                            <flux:error name="date" />
+                        </flux:field>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <flux:field>
+                                <flux:label class="font-bold text-zinc-700">Jam Mulai</flux:label>
+                                <flux:input type="time" wire:model="start_time" class="rounded-xl border-zinc-200" required />
+                                <flux:error name="start_time" />
+                            </flux:field>
+
+                            <flux:field>
+                                <flux:label class="font-bold text-zinc-700">Jam Selesai</flux:label>
+                                <flux:input type="time" wire:model="end_time" class="rounded-xl border-zinc-200" required />
+                                <flux:error name="end_time" />
+                            </flux:field>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100">
+                            <flux:modal.close>
+                                <flux:button variant="ghost" class="font-bold cursor-pointer rounded-xl">Batal</flux:button>
+                            </flux:modal.close>
+                            <flux:button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white border-none font-bold rounded-xl px-5 cursor-pointer">
+                                Ajukan Reservasi
+                            </flux:button>
+                        </div>
+                    </form>
+                @endif
             @endif
         </div>
     </flux:modal>

@@ -25,8 +25,8 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Jadwal Perkuliahan</flux:heading>
-            <flux:subheading>Lihat jadwal akademik resmi yang telah disusun oleh sistem.</flux:subheading>
+            <h1 class="text-2xl font-extrabold text-zinc-900 tracking-tight">Jadwal Perkuliahan</h1>
+            <p class="text-xs text-zinc-500 font-semibold mt-0.5">Lihat jadwal akademik resmi yang telah disusun oleh sistem.</p>
         </div>
         <flux:select wire:model.live="selectedDay" class="w-full sm:w-48" size="sm">
             <flux:select.option value="0">Semua Hari</flux:select.option>
@@ -41,10 +41,10 @@ new class extends Component {
     <flux:separator variant="subtle" />
 
     @if ($schedules->isEmpty())
-        <div class="flex flex-col items-center justify-center py-20 bg-neutral-50 rounded-xl border border-dashed border-neutral-300">
-            <flux:icon.calendar-days class="mb-4 text-neutral-400" size="xl" />
-            <flux:heading>Belum Ada Jadwal</flux:heading>
-            <flux:subheading>Jadwal akademik belum tersedia. Hubungi admin untuk informasi lebih lanjut.</flux:subheading>
+        <div class="flex flex-col items-center justify-center py-20 bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200">
+            <flux:icon.calendar-days class="mb-3 text-zinc-400 size-10" />
+            <flux:heading class="font-extrabold text-zinc-800 text-sm">Belum Ada Jadwal</flux:heading>
+            <flux:subheading class="text-xs text-zinc-500">Jadwal akademik belum tersedia. Hubungi admin untuk informasi lebih lanjut.</flux:subheading>
         </div>
     @else
         @php
@@ -55,48 +55,49 @@ new class extends Component {
         <div class="space-y-6">
             @foreach ($groupedSchedules as $day => $daySchedules)
                 <div>
-                    <div class="flex items-center gap-3 mb-3">
-                        <h3 class="font-semibold text-lg text-neutral-800">{{ $daftarHari[$day] ?? '-' }}</h3>
-                        <flux:badge size="sm" color="blue">{{ $daySchedules->count() }} kelas</flux:badge>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-2.5 h-4 bg-blue-600 rounded-sm inline-block"></span>
+                        <h3 class="font-extrabold text-md text-zinc-800">{{ $daftarHari[$day] ?? '-' }}</h3>
+                        <flux:badge size="sm" color="neutral" class="text-[10px] py-0.5 px-1.5 font-bold uppercase tracking-wide">{{ $daySchedules->count() }} kelas</flux:badge>
                     </div>
 
-                    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+                    <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden">
                         <div class="p-2 sm:p-4 overflow-x-auto">
                             <flux:table>
-                        <flux:table.columns>
-                            <flux:table.column>Waktu</flux:table.column>
-                            <flux:table.column>Mata Kuliah</flux:table.column>
-                            <flux:table.column>SKS</flux:table.column>
-                            <flux:table.column>Dosen</flux:table.column>
-                            <flux:table.column>Ruangan</flux:table.column>
-                        </flux:table.columns>
+                                <flux:table.columns>
+                                    <flux:table.column>Waktu</flux:table.column>
+                                    <flux:table.column>Mata Kuliah</flux:table.column>
+                                    <flux:table.column>SKS</flux:table.column>
+                                    <flux:table.column>Dosen</flux:table.column>
+                                    <flux:table.column>Ruangan</flux:table.column>
+                                </flux:table.columns>
 
-                        <flux:table.rows>
-                            @foreach ($daySchedules as $schedule)
-                                <flux:table.row wire:key="{{ $schedule->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
-                                    <flux:table.cell>
-                                        <span class="font-mono text-sm font-medium text-blue-700">
-                                            {{ substr($schedule->start_time, 0, 5) }} – {{ substr($schedule->end_time, 0, 5) }}
-                                        </span>
-                                    </flux:table.cell>
-                                    <flux:table.cell>
-                                        <div class="font-medium text-sm">{{ $schedule->course->name }}</div>
-                                        <div class="text-xs text-neutral-400">{{ $schedule->course->code }}</div>
-                                    </flux:table.cell>
-                                    <flux:table.cell>
-                                        <flux:badge color="violet" size="sm">{{ $schedule->course->sks }} SKS</flux:badge>
-                                    </flux:table.cell>
-                                    <flux:table.cell class="text-sm">
-                                        {{ $schedule->lecturer?->name ?? '-' }}
-                                    </flux:table.cell>
-                                    <flux:table.cell>
-                                        <div class="text-sm font-medium">{{ $schedule->room->name }}</div>
-                                        <div class="text-xs text-neutral-400">{{ $schedule->room->building }}, Lt. {{ $schedule->room->floor }}</div>
-                                    </flux:table.cell>
-                                </flux:table.row>
-                            @endforeach
-                        </flux:table.rows>
-                    </flux:table>
+                                <flux:table.rows>
+                                    @foreach ($daySchedules as $schedule)
+                                        <flux:table.row wire:key="{{ $schedule->id }}" class="transition-colors duration-200 hover:bg-zinc-50/50">
+                                            <flux:table.cell>
+                                                <span class="font-mono text-xs font-bold text-zinc-700 bg-zinc-100 px-2 py-1 rounded-md border border-zinc-200 inline-block">
+                                                    {{ substr($schedule->start_time, 0, 5) }} – {{ substr($schedule->end_time, 0, 5) }}
+                                                </span>
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <div class="font-bold text-sm text-zinc-800">{{ $schedule->course->name }}</div>
+                                                <div class="text-xs text-zinc-400 font-semibold">{{ $schedule->course->code }}</div>
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <flux:badge color="neutral" size="sm" class="text-[10px] font-bold">{{ $schedule->course->sks }} SKS</flux:badge>
+                                            </flux:table.cell>
+                                            <flux:table.cell class="text-sm font-semibold text-zinc-700">
+                                                {{ $schedule->lecturer?->name ?? '-' }}
+                                            </flux:table.cell>
+                                            <flux:table.cell>
+                                                <div class="text-sm font-bold text-zinc-800">{{ $schedule->room->name }}</div>
+                                                <div class="text-xs text-zinc-400 font-semibold">{{ $schedule->room->building }}, Lt. {{ $schedule->room->floor }}</div>
+                                            </flux:table.cell>
+                                        </flux:table.row>
+                                    @endforeach
+                                </flux:table.rows>
+                            </flux:table>
                         </div>
                     </div>
                 </div>

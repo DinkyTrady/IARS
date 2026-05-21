@@ -225,7 +225,7 @@ class GeneticAlgorithmService
     /**
      * Partial GA: Mencoba memindahkan jadwal akademik yang bentrok dengan reservasi
      * tanpa merubah seluruh jadwal lainnya.
-     * 
+     *
      * OPTIMASI v2:
      * - Hanya mutasi gen yang bentrok (lebih cepat)
      * - Early termination dengan threshold yang lebih realistis
@@ -297,10 +297,10 @@ class GeneticAlgorithmService
         // 4. Evolusi Partial dengan optimasi
         $bestOverallScore = 0;
         $bestOverallChromosome = null;
-        
+
         for ($generation = 0; $generation < $this->maxGenerations; $generation++) {
             $fitnessScores = [];
-            
+
             foreach ($population as $chromosome) {
                 $penalty = 0;
                 $criticalPenalty = 0; // Track penalty kritis terpisah
@@ -358,30 +358,32 @@ class GeneticAlgorithmService
                         }
                     }
                 }
-                
+
                 $fitness = 1 / (1 + $penalty);
                 $fitnessScores[] = $fitness;
-                
+
                 // Track solusi terbaik secara keseluruhan
                 if ($fitness > $bestOverallScore) {
                     $bestOverallScore = $fitness;
                     $bestOverallChromosome = $chromosome;
                 }
-                
+
                 // Early termination: Solusi sempurna ditemukan (tidak ada konflik dengan reservasi)
                 if ($criticalPenalty === 0 && $penalty <= 5) {
                     // Terima solusi dengan soft constraint minor (jam siang)
                     $this->saveBestSchedule($chromosome);
+
                     return true;
                 }
             }
 
             $bestScore = max($fitnessScores);
-            
+
             // Early termination: Solusi sempurna ditemukan
             if ($bestScore === 1.0) {
                 $bestIndex = array_search($bestScore, $fitnessScores);
                 $this->saveBestSchedule($population[$bestIndex]);
+
                 return true;
             }
 
@@ -409,7 +411,7 @@ class GeneticAlgorithmService
                     if (in_array($gene['course_id'], $conflictCourseIds)) {
                         // Rate mutasi adaptif: lebih tinggi di awal, menurun seiring generasi
                         $adaptiveMutationRate = $this->mutationRate * (1.5 + (1 - $generation / $this->maxGenerations));
-                        
+
                         if (rand(0, 100) / 100 < $adaptiveMutationRate) {
                             $gene['room_id'] = $roomIds[array_rand($roomIds)];
                             $gene['day'] = $days[array_rand($days)];
@@ -444,9 +446,10 @@ class GeneticAlgorithmService
             }
         }
 
-        // Jika tidak ada konflik kritis, terima solusi terbaik
-        if (!$criticalConflict && $bestOverallChromosome !== null) {
+        // Jika tidak ada konflik kritis dan tidak ada pelanggaran hard constraint lainnya, terima solusi terbaik
+        if (! $criticalConflict && $bestOverallChromosome !== null && $bestOverallScore > 0.0099) {
             $this->saveBestSchedule($bestOverallChromosome);
+
             return true;
         }
 

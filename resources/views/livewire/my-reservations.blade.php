@@ -17,12 +17,19 @@ new class extends Component {
             ->with('room')
             ->latest();
 
+        $stats = [
+            'total' => Reservation::where('user_id', auth()->id())->count(),
+            'approved' => Reservation::where('user_id', auth()->id())->where('status', 'approved')->count(),
+            'pending' => Reservation::where('user_id', auth()->id())->where('status', 'pending')->count(),
+        ];
+
         if ($this->statusFilter !== 'all') {
             $query->where('status', $this->statusFilter);
         }
 
         return [
             'reservations' => $query->paginate(10),
+            'stats' => $stats,
         ];
     }
 
@@ -40,8 +47,8 @@ new class extends Component {
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Riwayat Reservasi Saya</flux:heading>
-            <flux:subheading>Pantau status pengajuan peminjaman ruangan Anda di sini.</flux:subheading>
+            <h1 class="text-2xl font-extrabold text-zinc-900 tracking-tight">Riwayat Reservasi Saya</h1>
+            <p class="text-sm text-zinc-500 mt-1">Pantau status pengajuan peminjaman ruangan Anda di sini.</p>
         </div>
 
         <div class="w-full sm:w-48">
@@ -54,11 +61,47 @@ new class extends Component {
             </flux:select>
         </div>
     </div>
+    
+    {{-- Quick Stats Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-zinc-400"></div>
+            <div class="p-3 bg-zinc-100 rounded-xl text-zinc-500 flex items-center justify-center shrink-0">
+                <flux:icon.calendar class="size-6 text-zinc-500" />
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Total Pengajuan</div>
+                <div class="text-2xl font-extrabold text-zinc-800 mt-0.5">{{ $stats['total'] }}</div>
+            </div>
+        </div>
 
-    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
-        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
-            <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                <flux:icon.calendar class="text-white/80" />
+        <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
+            <div class="p-3 bg-green-50 rounded-xl text-green-600 flex items-center justify-center shrink-0">
+                <flux:icon.check-circle class="size-6 text-green-600" />
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Disetujui</div>
+                <div class="text-2xl font-extrabold text-zinc-800 mt-0.5">{{ $stats['approved'] }}</div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm flex items-center gap-4 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
+            <div class="p-3 bg-yellow-50 rounded-xl text-yellow-600 flex items-center justify-center shrink-0">
+                <flux:icon.clock class="size-6 text-yellow-600" />
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Menunggu Persetujuan</div>
+                <div class="text-2xl font-extrabold text-zinc-800 mt-0.5">{{ $stats['pending'] }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden">
+        <div class="bg-zinc-50 px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+            <h3 class="font-bold text-zinc-800 text-md flex items-center gap-2">
+                <flux:icon.calendar class="text-blue-600" variant="mini" />
                 Daftar Reservasi Saya
             </h3>
         </div>
@@ -126,7 +169,7 @@ new class extends Component {
         </flux:table.rows>
             </flux:table>
         </div>
-        <div class="p-4 border-t border-blue-100 bg-slate-50/50">
+        <div class="p-4 border-t border-zinc-200 bg-zinc-50/50">
             {{ $reservations->links() }}
         </div>
     </div>
