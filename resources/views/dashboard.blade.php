@@ -27,7 +27,7 @@
                ========================================================================= --}}
             
             {{-- 1. Hero Card Section (Solid Theme, Left Blue Accent, Integrated Button) --}}
-            <div class="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+            <div class="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
                 <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-600"></div>
                 <div class="space-y-1.5 md:pl-4">
                     <h1 class="text-2xl font-extrabold text-zinc-900 tracking-tight">Selamat Datang, {{ auth()->user()->name }}!</h1>

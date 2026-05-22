@@ -28,7 +28,7 @@ new class extends Component {
 
 <div class="max-w-[1400px] mx-auto px-4 sm:px-6 space-y-6">
     {{-- Header & Filters --}}
-    <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-6 bg-white rounded-[24px] p-6 shadow-sm border border-slate-200">
+    <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-6 bg-white rounded-[24px] p-6 shadow-sm border border-slate-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
         <div>
             <h1 class="text-[32px] font-bold text-slate-900 tracking-[-0.02em] leading-tight">Jadwal Perkuliahan</h1>
             <p class="text-[15px] text-slate-500 mt-1">Lihat jadwal akademik resmi yang telah disusun oleh sistem.</p>
@@ -90,7 +90,7 @@ new class extends Component {
                         </span>
                     </div>
 
-                    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600">
                                 <thead class="bg-slate-50/80 border-b border-slate-200 text-[12px] font-extrabold text-slate-800 uppercase tracking-widest">

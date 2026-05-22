@@ -94,7 +94,7 @@ new class extends Component {
 
     {{-- Compact Stats Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-200 ease-in-out hover:-translate-y-[2px] group">
+        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 group">
             <div class="size-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                 <flux:icon.calendar-days class="size-6 text-blue-600" />
             </div>
@@ -104,7 +104,7 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-200 ease-in-out hover:-translate-y-[2px] group">
+        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 group">
             <div class="size-12 rounded-full bg-green-50 flex items-center justify-center shrink-0">
                 <flux:icon.calendar-days class="size-6 text-green-600" />
             </div>
@@ -114,7 +114,7 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-200 ease-in-out hover:-translate-y-[2px] group">
+        <div class="h-[88px] bg-white rounded-[20px] shadow-sm border border-slate-100 flex items-center px-5 gap-4 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 group">
             <div class="size-12 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
                 <flux:icon.calendar-days class="size-6 text-purple-600" />
             </div>
@@ -126,7 +126,7 @@ new class extends Component {
     </div>
 
     {{-- Filters Toolbar --}}
-    <div class="bg-white rounded-[24px] p-6 shadow-sm border border-slate-200">
+    <div class="bg-white rounded-[24px] p-6 shadow-sm border border-slate-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div class="space-y-2">
                 <label class="block text-[13px] font-semibold text-slate-700">Filter Ruangan</label>
@@ -162,7 +162,7 @@ new class extends Component {
     </div>
 
     {{-- Reservations Table --}}
-    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 border-b border-slate-100 text-[13px] font-semibold text-slate-500">

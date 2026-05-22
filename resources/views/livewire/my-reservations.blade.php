@@ -54,7 +54,7 @@ new class extends Component {
     </div>
     
     {{-- Filter Toolbar --}}
-    <div class="bg-white rounded-[24px] p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="bg-white rounded-[24px] p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
         <div class="text-[15px] font-semibold text-slate-700 flex items-center gap-2">
             <flux:icon.funnel class="size-5 text-slate-400" />
             Filter Status
@@ -114,7 +114,7 @@ new class extends Component {
     </div>
 
     {{-- Table Section --}}
-    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-white rounded-[20px] shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 border-b border-slate-100 text-[13px] font-semibold text-slate-500">
