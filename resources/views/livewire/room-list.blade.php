@@ -110,14 +110,27 @@ new class extends Component {
     }
 }; ?>
 
-<div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        @forelse ($rooms as $room)
-            <div wire:key="{{ $room->id }}" class="flex flex-col gap-4 border-2 border-zinc-200 bg-white p-5 rounded-2xl relative overflow-hidden transition-all duration-300 hover:border-blue-600 hover:bg-zinc-50/10">
-                {{-- Decorative Solid Top Border Accent --}}
-                <div class="absolute left-0 right-0 top-0 h-1 bg-blue-600"></div>
+@php
+    $cardColors = [
+        ['bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'hover' => 'hover:border-blue-500', 'accent' => 'bg-blue-500 group-hover:bg-blue-600', 'btn_text' => 'text-white', 'btn_bg' => 'bg-blue-500', 'btn_hover' => 'hover:bg-blue-700'],
+        ['bg' => 'bg-violet-50', 'border' => 'border-violet-200', 'hover' => 'hover:border-violet-500', 'accent' => 'bg-violet-500 group-hover:bg-violet-600', 'btn_text' => 'text-white', 'btn_bg' => 'bg-violet-500', 'btn_hover' => 'hover:bg-violet-700'],
+        ['bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'hover' => 'hover:border-emerald-500', 'accent' => 'bg-emerald-500 group-hover:bg-emerald-600', 'btn_text' => 'text-white', 'btn_bg' => 'bg-emerald-500', 'btn_hover' => 'hover:bg-emerald-700'],
+        ['bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'hover' => 'hover:border-amber-500', 'accent' => 'bg-amber-500 group-hover:bg-amber-600', 'btn_text' => 'text-white', 'btn_bg' => 'bg-amber-500', 'btn_hover' => 'hover:bg-amber-700'],
+        ['bg' => 'bg-rose-50', 'border' => 'border-rose-200', 'hover' => 'hover:border-rose-500', 'accent' => 'bg-rose-500 group-hover:bg-rose-600', 'btn_text' => 'text-white', 'btn_bg' => 'bg-rose-500', 'btn_hover' => 'hover:bg-rose-700'],
+    ];
+@endphp
 
-                <div class="flex justify-between items-start pt-1">
+<div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        @forelse ($rooms as $index => $room)
+            @php
+                $color = $cardColors[$index % count($cardColors)];
+            @endphp
+            <div wire:key="{{ $room->id }}" class="flex flex-col gap-5 border {{ $color['border'] }} {{ $color['bg'] }} p-6 rounded-[2rem] shadow-sm relative overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-xl {{ $color['hover'] }} group cursor-pointer">
+                {{-- Decorative Solid Top Border Accent --}}
+                <div class="absolute left-0 right-0 top-0 h-3 {{ $color['accent'] }} transition-all duration-500 group-hover:h-4"></div>
+
+                <div class="flex justify-between items-start pt-2">
                     <div>
                         <h4 class="font-extrabold text-zinc-900 text-lg tracking-tight">{{ $room->name }}</h4>
                         <p class="text-xs text-zinc-500 font-semibold mt-0.5">{{ $room->building }} · Lantai {{ $room->floor }}</p>
@@ -142,13 +155,13 @@ new class extends Component {
 
                 <flux:spacer />
 
-                <flux:button 
-                    variant="ghost" 
-                    class="w-full border-2 border-zinc-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white font-extrabold text-xs tracking-wide uppercase transition-all duration-200 py-2.5 rounded-xl cursor-pointer" 
+                <button 
+                    type="button"
+                    class="w-full border-none {{ $color['btn_bg'] }} {{ $color['btn_text'] }} {{ $color['btn_hover'] }} hover:text-white font-extrabold text-xs tracking-wide uppercase transition-all duration-300 py-3 rounded-xl cursor-pointer mt-2 shadow-sm group-hover:shadow-md" 
                     wire:click="selectRoom({{ $room->id }})"
                 >
                     Reservasi Sekarang
-                </flux:button>
+                </button>
             </div>
         @empty
             <div class="col-span-3 flex flex-col items-center justify-center py-20 bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200">

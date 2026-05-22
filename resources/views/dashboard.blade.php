@@ -27,15 +27,16 @@
                ========================================================================= --}}
             
             {{-- 1. Hero Card Section (Solid Theme, Left Blue Accent, Integrated Button) --}}
-            <div class="bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 rounded-s-2xl"></div>
-                <div class="space-y-1 md:pl-2">
+            <div class="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-600"></div>
+                <div class="space-y-1.5 md:pl-4">
                     <h1 class="text-2xl font-extrabold text-zinc-900 tracking-tight">Selamat Datang, {{ auth()->user()->name }}!</h1>
-                    <p class="text-sm text-zinc-500 font-medium">Sistem Informasi Reservasi Ruangan (IARS). Silakan pilih ruangan di bawah untuk kegiatan Anda.</p>
+                    <p class="text-sm text-zinc-500 font-medium max-w-2xl">Sistem Informasi Reservasi Ruangan (IARS). Silakan telusuri daftar ruangan yang tersedia dan ajukan reservasi untuk kegiatan Anda.</p>
                 </div>
                 <flux:button 
+                    variant="primary"
                     icon="plus" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm shadow-blue-500/10 px-5 py-2.5 rounded-xl font-semibold shrink-0 cursor-pointer" 
+                    class="px-6 py-2.5 rounded-xl font-bold shrink-0 cursor-pointer transition-all hover:scale-105" 
                     href="{{ route('reservations.create') }}" 
                     wire:navigate
                 >
@@ -44,9 +45,9 @@
             </div>
 
             {{-- 2. Two-Column Dashboard Layout (Left: Rooms, Right: Status & Guide) --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
                 <!-- Left: Room List -->
-                <div class="lg:col-span-2 space-y-4">
+                <div class="xl:col-span-3 space-y-6">
                     <h2 class="text-lg font-bold text-zinc-900 flex items-center gap-2 px-1">
                         <span class="w-3 h-5 bg-blue-600 rounded-md inline-block"></span>
                         Daftar Ruangan Tersedia
@@ -55,10 +56,11 @@
                 </div>
                 
                 <!-- Right: Sidebar widgets (User Bookings & Guidelines) -->
-                <div class="space-y-6">
+                <div class="space-y-8">
                     <!-- Widget 1: Recent Booking Status -->
-                    <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm space-y-4">
-                        <h3 class="font-bold text-zinc-800 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
+                    <div class="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-4 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-blue-50/50 rounded-bl-full -z-10"></div>
+                        <h3 class="font-extrabold text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
                             <flux:icon.calendar-days class="text-blue-600" variant="mini" />
                             Status Peminjaman Terbaru
                         </h3>
@@ -113,8 +115,9 @@
                     </div>
 
                     <!-- Widget 2: Quick Guide -->
-                    <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm space-y-3">
-                        <h3 class="font-bold text-zinc-800 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
+                    <div class="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm space-y-3 relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-green-50/50 rounded-bl-full -z-10"></div>
+                        <h3 class="font-extrabold text-zinc-900 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3">
                             <flux:icon.academic-cap class="text-blue-600" variant="mini" />
                             Panduan Pengajuan
                         </h3>

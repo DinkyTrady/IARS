@@ -101,23 +101,23 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-6 max-w-6xl mx-auto px-4">
-    <header class="flex items-center gap-3 mb-1">
-        <flux:button variant="ghost" size="sm" icon="arrow-left" href="{{ route('dashboard') }}" wire:navigate />
+<div class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <header class="flex items-center gap-4 mb-2">
+        <flux:button variant="ghost" icon="arrow-left" class="rounded-full bg-white border border-zinc-200 shadow-sm hover:bg-zinc-50 hover:scale-105 transition-all" href="{{ route('dashboard') }}" wire:navigate />
         <div>
-            <h1 class="text-2xl font-extrabold text-zinc-900 tracking-tight">Buat Reservasi Ruangan</h1>
-            <p class="text-xs text-zinc-500 font-semibold mt-0.5">Sistem akan memeriksa konflik jadwal secara otomatis sebelum reservasi diajukan.</p>
+            <h1 class="text-3xl font-extrabold text-zinc-900 tracking-tight">Buat Reservasi Ruangan</h1>
+            <p class="text-base text-zinc-500 font-medium mt-1">Sistem akan memeriksa ketersediaan ruangan dan mencegah konflik jadwal secara otomatis.</p>
         </div>
     </header>
 
-    <flux:separator variant="subtle" />
+    <flux:separator variant="subtle" class="my-4" />
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {{-- Left Column: Room Details & Specific Guidelines --}}
         <div class="lg:col-span-1 space-y-6">
             @if ($selectedRoom)
-                <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>
+                <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-blue-200 group">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 group-hover:w-2 transition-all"></div>
                     <h3 class="font-extrabold text-zinc-900 text-lg tracking-tight mb-2">{{ $selectedRoom->name }}</h3>
                     <p class="text-xs text-zinc-500 font-bold mb-4">{{ $selectedRoom->building }} · Lantai {{ $selectedRoom->floor }}</p>
                     
@@ -158,7 +158,7 @@ new class extends Component {
                 </div>
             @endif
 
-            <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+            <div class="bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-blue-200 group">
                 <h3 class="font-bold text-zinc-800 text-sm flex items-center gap-2 border-b border-zinc-100 pb-3 mb-3">
                     <flux:icon.information-circle class="text-blue-600" variant="mini" />
                     Catatan Alur Peminjaman
@@ -174,10 +174,10 @@ new class extends Component {
         {{-- Right Column: Input Form --}}
         <div class="lg:col-span-2">
             <form wire:submit="save" class="space-y-6">
-                <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden">
-                    <div class="bg-zinc-50 px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
-                        <h3 class="font-bold text-zinc-800 text-md flex items-center gap-2">
-                            <flux:icon.document-text class="text-blue-600 size-5" />
+                <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md hover:border-indigo-200 group">
+                    <div class="bg-indigo-50/80 px-6 py-4 border-b border-indigo-100 flex items-center justify-between transition-colors group-hover:bg-indigo-100/50">
+                        <h3 class="font-bold text-indigo-900 text-md flex items-center gap-2">
+                            <flux:icon.document-text class="text-indigo-600 size-5" />
                             Detail Kegiatan
                         </h3>
                     </div>
@@ -196,10 +196,10 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden">
-                    <div class="bg-zinc-50 px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
-                        <h3 class="font-bold text-zinc-800 text-md flex items-center gap-2">
-                            <flux:icon.clock class="text-blue-600 size-5" />
+                <div class="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-md hover:border-emerald-200 group">
+                    <div class="bg-emerald-50/80 px-6 py-4 border-b border-emerald-100 flex items-center justify-between transition-colors group-hover:bg-emerald-100/50">
+                        <h3 class="font-bold text-emerald-900 text-md flex items-center gap-2">
+                            <flux:icon.clock class="text-emerald-600 size-5" />
                             Ruangan & Waktu
                         </h3>
                     </div>
@@ -239,9 +239,9 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="flex gap-3 justify-end pt-2 border-t border-zinc-100">
-                    <flux:button variant="ghost" class="font-bold cursor-pointer rounded-xl" href="{{ route('dashboard') }}" wire:navigate>Batal</flux:button>
-                    <flux:button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white border-none font-bold rounded-xl px-5 cursor-pointer shadow-sm shadow-blue-500/10">
+                <div class="flex gap-4 justify-end pt-4 border-t border-zinc-100 mt-2">
+                    <flux:button variant="ghost" class="font-bold cursor-pointer rounded-xl px-6" href="{{ route('dashboard') }}" wire:navigate>Batal</flux:button>
+                    <flux:button variant="primary" type="submit" class="font-bold rounded-xl px-8 cursor-pointer shadow-sm transition-all hover:scale-105">
                         Ajukan Reservasi
                     </flux:button>
                 </div>

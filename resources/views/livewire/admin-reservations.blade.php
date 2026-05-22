@@ -150,16 +150,17 @@ new class extends Component {
                                     <flux:table.cell>
                                         @if ($reservation->status === 'pending')
                                             <div class="flex gap-2">
-                                                <flux:button variant="ghost" size="sm"
-                                                    class="text-green-600 hover:text-green-700"
+                                                <button 
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
                                                     wire:click="approve({{ $reservation->id }})"
                                                     wire:confirm="Setujui reservasi ini?">
                                                     Setujui
-                                                </flux:button>
-                                                <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
+                                                </button>
+                                                <button 
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-1"
                                                     wire:click="openRejectModal({{ $reservation->id }})">
                                                     Tolak
-                                                </flux:button>
+                                                </button>
                                             </div>
                                         @else
                                             <span class="text-xs text-neutral-400 italic">Selesai</span>

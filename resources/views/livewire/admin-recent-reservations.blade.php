@@ -5,6 +5,9 @@ use Livewire\Volt\Component;
 use Flux\Flux;
 
 new class extends Component {
+    public ?Reservation $selectedReservation = null;
+    public string $admin_note = '';
+
     public function with(): array
     {
         return [
@@ -18,8 +21,46 @@ new class extends Component {
 
     public function approve(int $id): void
     {
-        Reservation::findOrFail($id)->update(['status' => 'approved']);
+        $reservation = Reservation::findOrFail($id);
+        
+        $service = new \App\Services\GeneticAlgorithmService();
+        $canResolve = $service->resolveConflictForReservation($reservation);
+
+        if (! $canResolve) {
+            Flux::toast('Gagal menyetujui. Reservasi bentrok dan tidak ada slot kosong.', variant: 'error');
+            return;
+        }
+
+        $reservation->update(['status' => 'approved']);
         Flux::toast('Reservasi disetujui.', variant: 'success');
+    }
+
+    public function openRejectModal(int $id): void
+    {
+        $this->selectedReservation = Reservation::findOrFail($id);
+        $this->admin_note = '';
+        Flux::modal('reject-modal-recent')->show();
+    }
+
+    public function reject(): void
+    {
+        $this->validate([
+            'admin_note' => 'required|string|min:3'
+        ], [
+            'admin_note.required' => 'Alasan penolakan wajib diisi.'
+        ]);
+
+        if ($this->selectedReservation) {
+            $this->selectedReservation->update([
+                'status' => 'rejected',
+                'note' => $this->admin_note,
+            ]);
+
+            Flux::modal('reject-modal-recent')->close();
+            $this->reset(['selectedReservation', 'admin_note']);
+
+            Flux::toast('Reservasi telah ditolak.', variant: 'success');
+        }
     }
 }; ?>
 
@@ -88,11 +129,19 @@ new class extends Component {
                     </flux:table.cell>
                     <flux:table.cell>
                         @if($reservation->status === 'pending')
-                            <flux:button variant="ghost" size="sm" class="text-green-600"
-                                wire:click="approve({{ $reservation->id }})"
-                                wire:confirm="Setujui reservasi ini?">
-                                Setujui
-                            </flux:button>
+                            <div class="flex gap-2">
+                                <button 
+                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
+                                    wire:click="approve({{ $reservation->id }})"
+                                    wire:confirm="Setujui reservasi ini?">
+                                    Setujui
+                                </button>
+                                <button 
+                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-1"
+                                    wire:click="openRejectModal({{ $reservation->id }})">
+                                    Tolak
+                                </button>
+                            </div>
                         @else
                             <span class="text-xs text-neutral-400 italic">-</span>
                         @endif
@@ -109,4 +158,26 @@ new class extends Component {
             </flux:table>
         </div>
     </div>
+
+    <flux:modal name="reject-modal-recent" class="md:w-[450px]">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Tolak Reservasi</flux:heading>
+                <flux:subheading>Berikan alasan penolakan agar pemohon dapat mengetahuinya.</flux:subheading>
+            </div>
+
+            <flux:field>
+                <flux:label>Alasan Penolakan</flux:label>
+                <flux:textarea wire:model="admin_note" placeholder="Contoh: Ruangan akan digunakan untuk perbaikan AC." />
+                <flux:error name="admin_note" />
+            </flux:field>
+
+            <div class="flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost">Batal</flux:button>
+                </flux:modal.close>
+                <flux:button variant="danger" wire:click="reject">Tolak Sekarang</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>

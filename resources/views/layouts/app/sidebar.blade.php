@@ -176,12 +176,13 @@
 
     /* Group Headings */
     .sidebar-user [data-flux-sidebar-group] h2, 
+    .sidebar-user [data-flux-navlist-group-heading],
     .sidebar-user flux\:sidebar\.group h2 {
         color: #64748b !important; /* slate-500 */
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.075em !important;
-        font-size: 0.65rem !important;
+        font-size: 0.7rem !important;
         margin-top: 1.5rem !important;
         padding-left: 0.5rem;
     }
@@ -245,12 +246,13 @@
 
     /* Group Headings */
     .sidebar-admin [data-flux-sidebar-group] h2, 
+    .sidebar-admin [data-flux-navlist-group-heading],
     .sidebar-admin flux\:sidebar\.group h2 {
-        color: #818cf8 !important; /* indigo-400 */
-        font-weight: 700 !important;
+        color: #a5b4fc !important; /* indigo-300 */
+        font-weight: 800 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.075em !important;
-        font-size: 0.65rem !important;
+        font-size: 0.7rem !important;
         margin-top: 1.5rem !important;
         padding-left: 0.5rem;
     }
@@ -280,6 +282,22 @@
     .sidebar-admin flux\:sidebar\.profile:hover *,
     .sidebar-admin .flux-sidebar-profile:hover * {
         color: #ffffff !important;
+    }
+
+    /* App Logo / Brand Text */
+    .sidebar-admin [data-flux-brand],
+    .sidebar-admin [data-flux-brand] *,
+    .sidebar-admin [data-flux-sidebar-brand],
+    .sidebar-admin [data-flux-sidebar-brand] *,
+    .sidebar-admin flux\:sidebar\.brand,
+    .sidebar-admin flux\:sidebar\.brand *,
+    .sidebar-admin .flux-brand-name {
+        color: #ffffff !important;
+    }
+    
+    .sidebar-admin [data-flux-brand] .flex,
+    .sidebar-admin [data-flux-sidebar-brand] .flex {
+        /* Prevent the icon box text from being overwritten if needed */
     }
 </style>
     </body>
