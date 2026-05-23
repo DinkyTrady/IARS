@@ -131,7 +131,7 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Manajemen Mata Kuliah</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Manajemen Mata Kuliah</flux:heading>
             <flux:subheading>Kelola data kurikulum dan mata kuliah untuk penjadwalan GA.</flux:subheading>
         </div>
         <div class="flex gap-2">
@@ -167,47 +167,56 @@ new class extends Component {
         </flux:card>
     @endif
 
-    <flux:table>
-        <flux:table.columns>
-            <flux:table.column>Kode</flux:table.column>
-            <flux:table.column>Nama Mata Kuliah</flux:table.column>
-            <flux:table.column>SKS</flux:table.column>
-            <flux:table.column>Semester</flux:table.column>
-            <flux:table.column>Estimasi Mhs</flux:table.column>
-            <flux:table.column>Aksi</flux:table.column>
-        </flux:table.columns>
+    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <flux:icon.book-open class="text-white/80" />
+                Daftar Mata Kuliah
+            </h3>
+        </div>
+        <div class="p-2 sm:p-4 overflow-x-auto">
+            <flux:table>
+            <flux:table.columns>
+                <flux:table.column>Kode</flux:table.column>
+                <flux:table.column>Nama Mata Kuliah</flux:table.column>
+                <flux:table.column>SKS</flux:table.column>
+                <flux:table.column>Semester</flux:table.column>
+                <flux:table.column>Estimasi Mhs</flux:table.column>
+                <flux:table.column>Aksi</flux:table.column>
+            </flux:table.columns>
 
-        <flux:table.rows>
-            @forelse ($courses as $course)
-                <flux:table.row wire:key="{{ $course->id }}">
-                    <flux:table.cell><span class="font-bold font-mono text-sm">{{ $course->code }}</span></flux:table.cell>
-                    <flux:table.cell class="font-medium">{{ $course->name }}</flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge variant="outline" size="sm">{{ $course->sks }} SKS</flux:badge>
-                    </flux:table.cell>
-                    <flux:table.cell>Semester {{ $course->semester }}</flux:table.cell>
-                    <flux:table.cell>{{ $course->expected_students }} mhs</flux:table.cell>
-                    <flux:table.cell>
-                        <div class="flex items-center gap-1">
-                            <flux:button variant="ghost" size="sm" wire:click="openEdit({{ $course->id }})" icon="pencil" />
-                            <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
-                                wire:click="delete({{ $course->id }})" wire:confirm="Yakin hapus mata kuliah '{{ $course->name }}'?"
-                                icon="trash" />
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="6" class="text-center py-8 text-neutral-500">
-                        {{ $search ? 'Tidak ada MK yang cocok dengan pencarian.' : 'Belum ada data mata kuliah.' }}
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
-
-    <div class="mt-4">
-        {{ $courses->links() }}
+            <flux:table.rows>
+                @forelse ($courses as $course)
+                    <flux:table.row wire:key="{{ $course->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
+                        <flux:table.cell><span class="font-bold font-mono text-sm">{{ $course->code }}</span></flux:table.cell>
+                        <flux:table.cell class="font-medium">{{ $course->name }}</flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge variant="outline" size="sm">{{ $course->sks }} SKS</flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell>Semester {{ $course->semester }}</flux:table.cell>
+                        <flux:table.cell>{{ $course->expected_students }} mhs</flux:table.cell>
+                        <flux:table.cell>
+                            <div class="flex items-center gap-1">
+                                <flux:button variant="ghost" size="sm" wire:click="openEdit({{ $course->id }})" icon="pencil" />
+                                <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
+                                    wire:click="delete({{ $course->id }})" wire:confirm="Yakin hapus mata kuliah '{{ $course->name }}'?"
+                                    icon="trash" />
+                            </div>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="6" class="text-center py-8 text-neutral-500">
+                            {{ $search ? 'Tidak ada MK yang cocok dengan pencarian.' : 'Belum ada data mata kuliah.' }}
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforelse
+            </flux:table.rows>
+            </flux:table>
+        </div>
+        <div class="p-4 border-t border-blue-100 bg-slate-50/50">
+            {{ $courses->links() }}
+        </div>
     </div>
 
     {{-- Modal Edit MK --}}

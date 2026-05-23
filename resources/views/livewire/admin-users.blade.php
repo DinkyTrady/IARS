@@ -85,13 +85,21 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Manajemen Pengguna</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Manajemen Pengguna</flux:heading>
             <flux:subheading>Kelola akun pengguna sistem reservasi ruangan.</flux:subheading>
         </div>
         <flux:input wire:model.live="search" placeholder="Cari pengguna..." icon="magnifying-glass" class="w-full sm:w-64" clearable />
     </header>
 
-    <flux:table>
+    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <flux:icon.user-group class="text-white/80" />
+                Daftar Pengguna
+            </h3>
+        </div>
+        <div class="p-2 sm:p-4 overflow-x-auto">
+            <flux:table>
         <flux:table.columns>
             <flux:table.column>Pengguna</flux:table.column>
             <flux:table.column>Email</flux:table.column>
@@ -102,7 +110,7 @@ new class extends Component {
 
         <flux:table.rows>
             @forelse ($users as $user)
-                <flux:table.row wire:key="{{ $user->id }}">
+                <flux:table.row wire:key="{{ $user->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
                     <flux:table.cell>
                         <div class="flex items-center gap-3">
                             <flux:avatar size="sm" name="{{ $user->name }}" />
@@ -138,10 +146,11 @@ new class extends Component {
                 </flux:table.row>
             @endforelse
         </flux:table.rows>
-    </flux:table>
-
-    <div class="mt-4">
-        {{ $users->links() }}
+            </flux:table>
+        </div>
+        <div class="p-4 border-t border-blue-100 bg-slate-50/50">
+            {{ $users->links() }}
+        </div>
     </div>
 
     {{-- Modal Edit User --}}

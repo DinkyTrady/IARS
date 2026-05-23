@@ -180,7 +180,7 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Manajemen Ruangan</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Manajemen Ruangan</flux:heading>
             <flux:subheading>Kelola data ruangan yang dapat dipesan oleh pengguna.</flux:subheading>
         </div>
         <div class="flex gap-2">
@@ -225,62 +225,71 @@ new class extends Component {
         </flux:card>
     @endif
 
-    <flux:table>
-        <flux:table.columns>
-            <flux:table.column>Kode</flux:table.column>
-            <flux:table.column>Nama Ruangan</flux:table.column>
-            <flux:table.column>Gedung / Lantai</flux:table.column>
-            <flux:table.column>Kapasitas</flux:table.column>
-            <flux:table.column>Fasilitas</flux:table.column>
-            <flux:table.column>Status</flux:table.column>
-            <flux:table.column>Aksi</flux:table.column>
-        </flux:table.columns>
+    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <flux:icon.building-office-2 class="text-white/80" />
+                Daftar Ruangan
+            </h3>
+        </div>
+        <div class="p-2 sm:p-4 overflow-x-auto">
+            <flux:table>
+            <flux:table.columns>
+                <flux:table.column>Kode</flux:table.column>
+                <flux:table.column>Nama Ruangan</flux:table.column>
+                <flux:table.column>Gedung / Lantai</flux:table.column>
+                <flux:table.column>Kapasitas</flux:table.column>
+                <flux:table.column>Fasilitas</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Aksi</flux:table.column>
+            </flux:table.columns>
 
-        <flux:table.rows>
-            @forelse ($rooms as $room)
-                <flux:table.row wire:key="{{ $room->id }}">
-                    <flux:table.cell><span class="font-bold font-mono text-sm">{{ $room->code }}</span></flux:table.cell>
-                    <flux:table.cell class="font-medium">{{ $room->name }}</flux:table.cell>
-                    <flux:table.cell>{{ $room->building }} (Lt. {{ $room->floor }})</flux:table.cell>
-                    <flux:table.cell>{{ $room->capacity }} orang</flux:table.cell>
-                    <flux:table.cell>
-                        <div class="flex flex-wrap gap-1">
-                            @forelse ($room->facilities ?? [] as $facility)
-                                <flux:badge variant="outline" size="sm">{{ $facility }}</flux:badge>
-                            @empty
-                                <span class="text-xs text-neutral-400">-</span>
-                            @endforelse
-                        </div>
-                    </flux:table.cell>
-                    <flux:table.cell>
-                        <flux:badge color="{{ $room->status === 'available' ? 'green' : 'red' }}" size="sm">
-                            {{ $room->status === 'available' ? 'Tersedia' : 'Tidak Tersedia' }}
-                        </flux:badge>
-                    </flux:table.cell>
-                    <flux:table.cell>
-                        <div class="flex items-center gap-1">
-                            <flux:button variant="ghost" size="sm" wire:click="openEdit({{ $room->id }})" icon="pencil" />
-                            <flux:button variant="ghost" size="sm" wire:click="toggleStatus({{ $room->id }})"
-                                icon="{{ $room->status === 'available' ? 'eye-slash' : 'eye' }}"
-                                title="{{ $room->status === 'available' ? 'Nonaktifkan' : 'Aktifkan' }}" />
-                            <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
-                                wire:click="delete({{ $room->id }})" wire:confirm="Yakin hapus ruangan '{{ $room->name }}'?"
-                                icon="trash" />
-                        </div>
-                    </flux:table.cell>
-                </flux:table.row>
-            @empty
-                <flux:table.row>
-                    <flux:table.cell colspan="7" class="text-center py-8 text-neutral-500">
-                        {{ $search ? 'Tidak ada ruangan yang cocok dengan pencarian.' : 'Belum ada data ruangan.' }}
-                    </flux:table.cell>
-                </flux:table.row>
-            @endforelse
-        </flux:table.rows>
-    </flux:table>
-
-    <div class="mt-4">
-        {{ $rooms->links() }}
+            <flux:table.rows>
+                @forelse ($rooms as $room)
+                    <flux:table.row wire:key="{{ $room->id }}" class="transition-colors duration-200 hover:bg-blue-50/50">
+                        <flux:table.cell><span class="font-bold font-mono text-sm">{{ $room->code }}</span></flux:table.cell>
+                        <flux:table.cell class="font-medium">{{ $room->name }}</flux:table.cell>
+                        <flux:table.cell>{{ $room->building }} (Lt. {{ $room->floor }})</flux:table.cell>
+                        <flux:table.cell>{{ $room->capacity }} orang</flux:table.cell>
+                        <flux:table.cell>
+                            <div class="flex flex-wrap gap-1">
+                                @forelse ($room->facilities ?? [] as $facility)
+                                    <flux:badge color="blue" size="sm">{{ $facility }}</flux:badge>
+                                @empty
+                                    <span class="text-xs text-neutral-400">-</span>
+                                @endforelse
+                            </div>
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="{{ $room->status === 'available' ? 'green' : 'amber' }}" size="sm">
+                                {{ $room->status === 'available' ? 'Tersedia' : 'Tidak Tersedia' }}
+                            </flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <div class="flex items-center gap-1">
+                                <flux:button variant="ghost" size="sm" wire:click="openEdit({{ $room->id }})" icon="pencil" />
+                                <flux:button variant="ghost" size="sm" wire:click="toggleStatus({{ $room->id }})"
+                                    icon="{{ $room->status === 'available' ? 'eye-slash' : 'eye' }}"
+                                    title="{{ $room->status === 'available' ? 'Nonaktifkan' : 'Aktifkan' }}" />
+                                <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
+                                    wire:click="delete({{ $room->id }})" wire:confirm="Yakin hapus ruangan '{{ $room->name }}'?"
+                                    icon="trash" />
+                            </div>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @empty
+                    <flux:table.row>
+                        <flux:table.cell colspan="7" class="text-center py-8 text-neutral-500">
+                            {{ $search ? 'Tidak ada ruangan yang cocok dengan pencarian.' : 'Belum ada data ruangan.' }}
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforelse
+            </flux:table.rows>
+            </flux:table>
+        </div>
+        <div class="p-4 border-t border-blue-100 bg-slate-50/50">
+            {{ $rooms->links() }}
+        </div>
     </div>
 
     {{-- Modal Edit Ruangan --}}
