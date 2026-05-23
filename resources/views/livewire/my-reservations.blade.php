@@ -189,9 +189,10 @@ new class extends Component {
                         <tr>
                             <td colspan="5" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center justify-center">
-                                    <div class="size-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 text-3xl">
-                                        📅
+                                    <div class="size-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 text-slate-400">
+                                        <flux:icon.calendar-days size="xl" variant="outline" />
                                     </div>
+
                                     <h3 class="text-[15px] font-bold text-slate-900">Belum ada reservasi</h3>
                                     <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
                                         Anda belum memiliki riwayat reservasi pada kategori ini. Reservasi yang Anda buat akan muncul di sini.

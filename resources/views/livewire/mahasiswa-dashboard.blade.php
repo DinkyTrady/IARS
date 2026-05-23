@@ -33,7 +33,12 @@ new class extends Component {
     <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-lg">
         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="space-y-2 text-center md:text-left">
-                <flux:heading size="xl" class="!text-white font-black">Halo, {{ auth()->user()->name }}! 👋</flux:heading>
+                <flux:heading size="xl" class="!text-white font-black flex items-center gap-2">
+                    Halo, {{ auth()->user()->name }}! 
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 animate-bounce">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075-5.925V4.275a1.575 1.575 0 0 1 3.15 0v2.85m-3.15-2.85.075 5.85m3.075-5.85a1.575 1.575 0 0 1 3.15 0V13.5a9 9 0 0 1-18 0V4.575a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 13.5 0V12.75" />
+                    </svg>
+                </flux:heading>
                 <flux:text class="text-blue-100 text-lg opacity-90">Senang melihat Anda kembali. Siap untuk produktif hari ini?</flux:text>
             </div>
             <div class="hidden md:flex items-center gap-4 bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">

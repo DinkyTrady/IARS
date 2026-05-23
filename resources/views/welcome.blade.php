@@ -150,8 +150,10 @@
 <!-- Navigation -->
 <nav>
     <div class="nav-brand">
-        <span>🏛</span>
-        IARS
+        <span class="flex items-center justify-center bg-blue-600 rounded-lg p-1.5 shadow-sm shadow-blue-500/20">
+            <x-app-logo-icon class="size-6 text-white" />
+        </span>
+        <span class="font-black tracking-tight text-blue-600 uppercase">IARS</span>
     </div>
     <div class="nav-links">
         @if (Route::has('login'))
@@ -172,7 +174,12 @@
     <div class="hero-bg"></div>
     <div class="hero-content">
         <div>
-            <div class="hero-badge">✨ Sistem Reservasi Cerdas</div>
+            <div class="hero-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                </svg>
+                Sistem Reservasi Cerdas
+            </div>
             <h1 class="hero-title">
                 Pesan Ruangan Kampus<br>
                 <span class="highlight">Lebih Mudah & Cerdas</span>
@@ -206,7 +213,11 @@
                 <div class="dot"></div>
             </div>
             <div class="room-card">
-                <div class="room-icon" style="background:#dbeafe">🏫</div>
+                <div class="room-icon" style="background:#dbeafe">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-blue-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+                    </svg>
+                </div>
                 <div class="room-info">
                     <div class="room-name">Ruang Teori A</div>
                     <div class="room-detail">Gedung A · Lantai 2 · 40 orang</div>
@@ -214,7 +225,11 @@
                 <span class="badge badge-green">Tersedia</span>
             </div>
             <div class="room-card">
-                <div class="room-icon" style="background:#ede9fe">🖥️</div>
+                <div class="room-icon" style="background:#ede9fe">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-indigo-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+                    </svg>
+                </div>
                 <div class="room-info">
                     <div class="room-name">Lab Komputer 1</div>
                     <div class="room-detail">Gedung B · Lantai 1 · 35 orang</div>
@@ -222,7 +237,11 @@
                 <span class="badge badge-red">Terpakai</span>
             </div>
             <div class="room-card">
-                <div class="room-icon" style="background:#fce7f3">🎓</div>
+                <div class="room-icon" style="background:#fce7f3">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-pink-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                    </svg>
+                </div>
                 <div class="room-info">
                     <div class="room-name">Aula Serbaguna</div>
                     <div class="room-detail">Gedung C · Lantai 1 · 120 orang</div>
@@ -257,32 +276,56 @@
         </div>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon" style="background:#dbeafe">📋</div>
+                <div class="feature-icon" style="background:#dbeafe">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-blue-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Reservasi Ruangan</div>
                 <div class="feature-desc">Ajukan pemesanan ruangan dengan mudah. Pilih ruangan, tentukan waktu, dan tunggu persetujuan admin.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" style="background:#dcfce7">✅</div>
+                <div class="feature-icon" style="background:#dcfce7">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-green-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Validasi Konflik Otomatis</div>
                 <div class="feature-desc">Sistem mendeteksi dan mencegah konflik jadwal secara real-time, baik dengan reservasi lain maupun jadwal akademik.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" style="background:#fce7f3">🧬</div>
+                <div class="feature-icon" style="background:#fce7f3">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-pink-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.755 10.04a.75.75 0 0 1 .634.934l-.004.013a2.25 2.25 0 0 1-.581 1.054l-.454.455a2.25 2.25 0 0 0 0 3.182l.454.454a2.25 2.25 0 0 1 .581 1.055l.004.013a.75.75 0 1 1-1.436.48l-.004-.013a3.75 3.75 0 0 0-.968-1.758l-.454-.454a3.75 3.75 0 0 1 0-5.304l.454-.454a3.75 3.75 0 0 0 .968-1.759l.004-.012a.75.75 0 0 1 .934-.634Zm14.49 0a.75.75 0 0 0-.634.934l.004.013c.056.17.152.326.28.46l.454.455a2.25 2.25 0 0 1 0 3.182l-.454.454a2.25 2.25 0 0 0-.581 1.055l-.004.013a.75.75 0 1 0 1.436.48l.004-.013a3.75 3.75 0 0 1 .968-1.758l.454-.454a3.75 3.75 0 0 0 0-5.304l-.454-.454a3.75 3.75 0 0 1-.968-1.759l-.004-.012a.75.75 0 0 0-.934-.634ZM9 12a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Genetic Algorithm</div>
                 <div class="feature-desc">Optimasi jadwal perkuliahan otomatis menggunakan GA untuk meminimalkan konflik ruangan dan dosen.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" style="background:#fef3c7">📊</div>
+                <div class="feature-icon" style="background:#fef3c7">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-amber-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Dashboard Real-time</div>
                 <div class="feature-desc">Pantau status reservasi, ketersediaan ruangan, dan statistik penggunaan secara real-time.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" style="background:#ede9fe">🔐</div>
+                <div class="feature-icon" style="background:#ede9fe">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-indigo-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Multi-role Access</div>
                 <div class="feature-desc">Dua level akses: Admin (Pengelola) untuk manajemen penuh, dan Pengguna untuk reservasi dan melihat jadwal.</div>
             </div>
             <div class="feature-card">
-                <div class="feature-icon" style="background:#f0fdf4">📅</div>
+                <div class="feature-icon" style="background:#f0fdf4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-green-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                    </svg>
+                </div>
                 <div class="feature-title">Jadwal Akademik</div>
                 <div class="feature-desc">Lihat jadwal perkuliahan resmi yang telah disusun otomatis berdasarkan mata kuliah, dosen, dan ruangan.</div>
             </div>
