@@ -52,38 +52,42 @@ new class extends Component {
 
         $start = Carbon::parse("{$this->date} {$this->start_time}");
         $end = Carbon::parse("{$this->date} {$this->end_time}");
+        $systemNote = null;
+        $hasConflict = false;
 
-        // 1. Cek konflik dengan Jadwal Akademik (GA) - metode overlap yang benar
-        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; // 1 = Senin, 5 = Jumat
+        // 1. Cek konflik dengan Jadwal Akademik (GA)
+        $dayOfWeek = Carbon::parse($this->date)->dayOfWeekIso; 
 
         $academicConflict = AcademicSchedule::where('room_id', $this->selectedRoom->id)
             ->where('day', $dayOfWeek)
             ->where(function ($query) use ($start, $end) {
-                // Overlap terjadi jika: start_A < end_B AND end_A > start_B
                 $query->whereTime('start_time', '<', $end->format('H:i:s'))
                       ->whereTime('end_time', '>', $start->format('H:i:s'));
             })
             ->first();
 
         if ($academicConflict) {
-            $this->addError('start_time', 'Ruangan sedang digunakan untuk jadwal perkuliahan: ' . $academicConflict->course->name);
-            return;
+            $systemNote = "Peringatan Sistem: Ruangan bentrok dengan jadwal perkuliahan " . $academicConflict->course->name . 
+                          " (" . substr($academicConflict->start_time, 0, 5) . " - " . substr($academicConflict->end_time, 0, 5) . ").";
+            $hasConflict = true;
         }
 
-        // 2. Cek konflik dengan Reservasi lain (pending/approved)
-        $reservationConflict = Reservation::where('room_id', $this->selectedRoom->id)
-            ->where('date', $this->date)
-            ->whereIn('status', ['pending', 'approved'])
-            ->where(function ($query) use ($start, $end) {
-                // Overlap terjadi jika: start_A < end_B AND end_A > start_B
-                $query->whereTime('start_time', '<', $end->format('H:i:s'))
-                      ->whereTime('end_time', '>', $start->format('H:i:s'));
-            })
-            ->first();
+        // 2. Cek konflik dengan Reservasi lain (Jika belum bentrok dengan jadwal kuliah)
+        if (!$hasConflict) {
+            $reservationConflict = Reservation::where('room_id', $this->selectedRoom->id)
+                ->where('date', $this->date)
+                ->whereIn('status', ['pending', 'approved'])
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereTime('start_time', '<', $end->format('H:i:s'))
+                          ->whereTime('end_time', '>', $start->format('H:i:s'));
+                })
+                ->first();
 
-        if ($reservationConflict) {
-            $this->addError('start_time', 'Ruangan sudah dipesan pada jam tersebut (Status: ' . ucfirst($reservationConflict->status) . ')');
-            return;
+            if ($reservationConflict) {
+                $systemNote = "Peringatan Sistem: Ruangan bentrok dengan reservasi " . $reservationConflict->activity_name . 
+                              " (" . substr($reservationConflict->start_time, 0, 5) . " - " . substr($reservationConflict->end_time, 0, 5) . ").";
+                $hasConflict = true;
+            }
         }
 
         Reservation::create([
@@ -95,15 +99,23 @@ new class extends Component {
             'start_time' => $start->format('H:i:s'),
             'end_time' => $end->format('H:i:s'),
             'status' => 'pending',
+            'note' => $systemNote,
         ]);
 
         $this->modal('reservation-modal')->close();
         $this->reset(['activity_name', 'description', 'date', 'start_time', 'end_time', 'selectedRoom']);
 
-        Flux::toast(
-            text: 'Reservasi berhasil diajukan! Menunggu persetujuan admin.',
-            variant: 'success',
-        );
+        if ($hasConflict) {
+            Flux::toast(
+                text: 'Reservasi masuk dengan status "menunggu peninjauan khusus admin" karena terdeteksi bentrok.',
+                variant: 'warning',
+            );
+        } else {
+            Flux::toast(
+                text: 'Reservasi berhasil diajukan! Menunggu persetujuan admin.',
+                variant: 'success',
+            );
+        }
     }
 }; ?>
 

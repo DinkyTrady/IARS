@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AcademicSchedule;
 use App\Models\Course;
 use App\Models\Lecturer;
+use App\Models\Reservation;
 use App\Models\Room;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -216,6 +217,154 @@ class GeneticAlgorithmService
                     'day' => $data['day'],
                     'start_time' => $data['start_time'],
                     'end_time' => $data['end_time'],
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Partial GA: Mencoba memindahkan jadwal akademik yang bentrok dengan reservasi
+     * menggunakan prinsip evolusi (Populasi, Mutasi, Fitness).
+     */
+    public function resolveConflictForReservation(Reservation $reservation): bool
+    {
+        $dayOfWeek = Carbon::parse($reservation->date)->dayOfWeekIso;
+        $start = strtotime($reservation->start_time);
+        $end = strtotime($reservation->end_time);
+
+        // 1. Identifikasi jadwal akademik yang bentrok (Korban)
+        $victims = AcademicSchedule::where('room_id', $reservation->room_id)
+            ->where('day', $dayOfWeek)
+            ->get()
+            ->filter(function ($schedule) use ($start, $end) {
+                $sStart = strtotime($schedule->start_time);
+                $sEnd = strtotime($schedule->end_time);
+                return $sStart < $end && $sEnd > $start;
+            });
+
+        if ($victims->isEmpty()) {
+            return true; // Tidak ada konflik
+        }
+
+        // 2. Inisialisasi Populasi Solusi Alternatif
+        $population = [];
+        $partialPopSize = 20;
+        $maxGens = 50;
+
+        for ($p = 0; $p < $partialPopSize; $p++) {
+            $individual = [];
+            foreach ($victims as $v) {
+                $individual[$v->id] = [
+                    'room_id' => $this->rooms->random()->id,
+                    'day' => rand(1, 5),
+                    'start_time' => $this->allowedStartTimes[array_rand($this->allowedStartTimes)],
+                ];
+            }
+            $population[] = $individual;
+        }
+
+        // 3. Evolusi
+        for ($gen = 0; $gen < $maxGens; $gen++) {
+            $fitnessScores = [];
+            foreach ($population as $index => $individual) {
+                $penalty = 0;
+                foreach ($individual as $scheduleId => $move) {
+                    $v = $victims->firstWhere('id', $scheduleId);
+                    $duration = strtotime($v->end_time) - strtotime($v->start_time);
+                    $newEnd = date('H:i:s', strtotime($move['start_time']) + $duration);
+
+                    // Fitness Check: Cek bentrok dengan jadwal lain yang DIKUNCI (Freeze)
+                    if (!$this->isSlotAvailable($move['room_id'], $move['day'], $move['start_time'], $newEnd, $scheduleId, $reservation)) {
+                        $penalty += 100;
+                    }
+                }
+                
+                $fitness = 1 / (1 + $penalty);
+                if ($fitness === 1.0) {
+                    $this->applyRelocation($individual, $victims);
+                    return true;
+                }
+                $fitnessScores[$index] = $fitness;
+            }
+
+            // Seleksi & Mutasi
+            $newPopulation = [];
+            while (count($newPopulation) < $partialPopSize) {
+                $parentIndex = array_search(max($fitnessScores), $fitnessScores);
+                $child = $population[$parentIndex];
+
+                // Mutasi: Ubah satu jadwal secara acak
+                $randomVictimId = array_rand($child);
+                $child[$randomVictimId] = [
+                    'room_id' => $this->rooms->random()->id,
+                    'day' => rand(1, 5),
+                    'start_time' => $this->allowedStartTimes[array_rand($this->allowedStartTimes)],
+                ];
+                
+                $newPopulation[] = $child;
+            }
+            $population = $newPopulation;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a specific slot is available (No conflict with Academic Schedules or Approved Reservations).
+     */
+    private function isSlotAvailable(int $roomId, int $day, string $start, string $end, int $excludeScheduleId, Reservation $currentReservation): bool
+    {
+        // Check Academic Schedule conflict (Freeze others)
+        $academicConflict = AcademicSchedule::where('id', '!=', $excludeScheduleId)
+            ->where('room_id', $roomId)
+            ->where('day', $day)
+            ->where(function ($query) use ($start, $end) {
+                $query->whereTime('start_time', '<', $end)
+                      ->whereTime('end_time', '>', $start);
+            })
+            ->exists();
+
+        if ($academicConflict) return false;
+
+        // Check against the current reservation (if it's the same day/room)
+        $currentResDay = Carbon::parse($currentReservation->date)->dayOfWeekIso;
+        if ($roomId === $currentReservation->room_id && $day === $currentResDay) {
+            if ($start < $currentReservation->end_time && $end > $currentReservation->start_time) {
+                return false;
+            }
+        }
+
+        // Check against other approved reservations
+        $reservationConflict = Reservation::where('status', 'approved')
+            ->where('room_id', $roomId)
+            ->whereRaw("strftime('%w', date) = ?", [($day % 7)])
+            ->where(function ($query) use ($start, $end) {
+                $query->whereTime('start_time', '<', $end)
+                      ->whereTime('end_time', '>', $start);
+            })
+            ->exists();
+
+        if ($reservationConflict) return false;
+
+        return true;
+    }
+
+    /**
+     * Terapkan hasil relokasi ke database.
+     */
+    private function applyRelocation(array $individual, $victims): void
+    {
+        DB::transaction(function () use ($individual, $victims) {
+            foreach ($individual as $id => $move) {
+                $v = $victims->firstWhere('id', $id);
+                $duration = strtotime($v->end_time) - strtotime($v->start_time);
+                $newEnd = date('H:i:s', strtotime($move['start_time']) + $duration);
+
+                AcademicSchedule::where('id', $id)->update([
+                    'room_id' => $move['room_id'],
+                    'day' => $move['day'],
+                    'start_time' => $move['start_time'] . ':00',
+                    'end_time' => $newEnd,
                 ]);
             }
         });
