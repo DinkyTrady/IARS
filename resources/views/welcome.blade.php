@@ -150,8 +150,12 @@
 <!-- Navigation -->
 <nav>
     <div class="nav-brand">
-        <span>🏛</span>
-        IARS
+        <span class="flex items-center justify-center bg-blue-600 rounded-lg p-1.5 shadow-sm shadow-blue-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="white" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+            </svg>
+        </span>
+        <span class="font-black tracking-tight text-blue-600">IARS</span>
     </div>
     <div class="nav-links">
         @if (Route::has('login'))

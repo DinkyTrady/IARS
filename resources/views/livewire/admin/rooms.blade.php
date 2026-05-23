@@ -253,7 +253,10 @@ new class extends Component {
                         <flux:table.cell>{{ $room->capacity }} orang</flux:table.cell>
                         <flux:table.cell>
                             <div class="flex flex-wrap gap-1">
-                                @forelse ($room->facilities ?? [] as $facility)
+                                @php
+                                    $roomFacilities = is_array($room->facilities) ? $room->facilities : json_decode($room->facilities ?? '[]', true) ?? [];
+                                @endphp
+                                @forelse ($roomFacilities as $facility)
                                     <flux:badge color="blue" size="sm">{{ $facility }}</flux:badge>
                                 @empty
                                     <span class="text-xs text-neutral-400">-</span>
