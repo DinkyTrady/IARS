@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-white">
+        <flux:sidebar sticky collapsible class="{{ auth()->user()->role === 'admin' ? 'sidebar-admin bg-zinc-950 border-e border-zinc-950 text-zinc-100' : 'sidebar-user bg-white border-e border-zinc-200 text-zinc-800' }}">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="lg:hidden" />
+                <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
@@ -22,6 +22,10 @@
 
                     <flux:sidebar.item icon="plus-circle" :href="route('reservations.create')" :current="request()->routeIs('reservations.create')" wire:navigate>
                         {{ __('Buat Reservasi') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="calendar" :href="route('reservations.schedule')" :current="request()->routeIs('reservations.schedule')" wire:navigate>
+                        {{ __('Jadwal Reservasi') }}
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="table-cells" :href="route('schedules.index')" :current="request()->routeIs('schedules.index')" wire:navigate>
@@ -127,5 +131,174 @@
         {{ $slot }}
 
         @fluxScripts
+
+        <style>
+    /* ==========================================
+       BODY BACKGROUND PERAN-SPESIFIK (UX HIGH-END)
+       ========================================== */
+    body:has(.sidebar-user) {
+        background-color: #f8fafc !important; /* Soft Slate-50 untuk panel siswa/dosen agar kartu terlihat melayang */
+    }
+    
+    body:has(.sidebar-admin) {
+        background-color: #f1f5f9 !important; /* Slate-100 untuk panel administratif agar tabel & statistik menonjol */
+    }
+
+    /* ==========================================
+       THEME 1: SIDEBAR USER (MAHASISWA/DOSEN - BERSIH & BIRU)
+       ========================================== */
+    /* Sidebar Item Default */
+    .sidebar-user [data-flux-sidebar-item], 
+    .sidebar-user flux\:sidebar\.item {
+        color: #4b5563 !important; /* gray-600 */
+        margin-bottom: 2px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Hover State */
+    .sidebar-user [data-flux-sidebar-item]:hover,
+    .sidebar-user flux\:sidebar\.item:hover {
+        background-color: #eff6ff !important; /* blue-50 */
+        color: #1d4ed8 !important; /* blue-700 */
+        transform: translateX(4px);
+    }
+    
+    /* Active State (Selected Menu) */
+    .sidebar-user [data-flux-sidebar-item][current],
+    .sidebar-user flux\:sidebar\.item[current] {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; /* Ocean Blue Gradient */
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* Group Headings */
+    .sidebar-user [data-flux-sidebar-group] h2, 
+    .sidebar-user [data-flux-navlist-group-heading],
+    .sidebar-user flux\:sidebar\.group h2 {
+        color: #64748b !important; /* slate-500 */
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.075em !important;
+        font-size: 0.7rem !important;
+        margin-top: 1.5rem !important;
+        padding-left: 0.5rem;
+    }
+
+    /* Profile Section Divider */
+    .sidebar-user [data-test="sidebar-menu-button"] {
+        border-top: 1px solid #f3f4f6 !important;
+        margin-top: 8px !important;
+        padding-top: 12px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    /* Profile Hover */
+    .sidebar-user [data-flux-profile]:hover,
+    .sidebar-user button[data-test="sidebar-menu-button"]:hover,
+    .sidebar-user [data-flux-sidebar-profile]:hover,
+    .sidebar-user flux\:sidebar\.profile:hover,
+    .sidebar-user .flux-sidebar-profile:hover {
+        background-color: #f3f4f6 !important; /* gray-100 */
+        color: #111827 !important; /* dark gray */
+        border-radius: 8px !important;
+    }
+
+    .sidebar-user [data-flux-profile]:hover *,
+    .sidebar-user button[data-test="sidebar-menu-button"]:hover *,
+    .sidebar-user [data-flux-sidebar-profile]:hover *,
+    .sidebar-user flux\:sidebar\.profile:hover *,
+    .sidebar-user .flux-sidebar-profile:hover * {
+        color: #111827 !important;
+    }
+
+    /* ==========================================
+       THEME 2: SIDEBAR ADMIN (PENGELOLA - DARK MIDNIGHT & VIOLET)
+       ========================================== */
+    /* Sidebar Item Default */
+    .sidebar-admin [data-flux-sidebar-item], 
+    .sidebar-admin flux\:sidebar\.item {
+        color: #94a3b8 !important; /* slate-400 */
+        margin-bottom: 2px !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+    }
+    
+    /* Hover State */
+    .sidebar-admin [data-flux-sidebar-item]:hover,
+    .sidebar-admin flux\:sidebar\.item:hover {
+        background-color: #1e293b !important; /* slate-800 */
+        color: #ffffff !important;
+        transform: translateX(4px);
+    }
+    
+    /* Active State (Selected Menu) */
+    .sidebar-admin [data-flux-sidebar-item][current],
+    .sidebar-admin flux\:sidebar\.item[current] {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important; /* Indigo Gradient */
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+    }
+
+    /* Group Headings */
+    .sidebar-admin [data-flux-sidebar-group] h2, 
+    .sidebar-admin [data-flux-navlist-group-heading],
+    .sidebar-admin flux\:sidebar\.group h2 {
+        color: #a5b4fc !important; /* indigo-300 */
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.075em !important;
+        font-size: 0.7rem !important;
+        margin-top: 1.5rem !important;
+        padding-left: 0.5rem;
+    }
+
+    /* Profile Section Divider */
+    .sidebar-admin [data-test="sidebar-menu-button"] {
+        border-top: 1px solid #1e293b !important;
+        margin-top: 8px !important;
+        padding-top: 12px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    /* Profile Hover */
+    .sidebar-admin [data-flux-profile]:hover,
+    .sidebar-admin button[data-test="sidebar-menu-button"]:hover,
+    .sidebar-admin [data-flux-sidebar-profile]:hover,
+    .sidebar-admin flux\:sidebar\.profile:hover,
+    .sidebar-admin .flux-sidebar-profile:hover {
+        background-color: #27272a !important; /* zinc-800 */
+        color: #ffffff !important;
+        border-radius: 8px !important;
+    }
+
+    .sidebar-admin [data-flux-profile]:hover *,
+    .sidebar-admin button[data-test="sidebar-menu-button"]:hover *,
+    .sidebar-admin [data-flux-sidebar-profile]:hover *,
+    .sidebar-admin flux\:sidebar\.profile:hover *,
+    .sidebar-admin .flux-sidebar-profile:hover * {
+        color: #ffffff !important;
+    }
+
+    /* App Logo / Brand Text */
+    .sidebar-admin [data-flux-brand],
+    .sidebar-admin [data-flux-brand] *,
+    .sidebar-admin [data-flux-sidebar-brand],
+    .sidebar-admin [data-flux-sidebar-brand] *,
+    .sidebar-admin flux\:sidebar\.brand,
+    .sidebar-admin flux\:sidebar\.brand *,
+    .sidebar-admin .flux-brand-name {
+        color: #ffffff !important;
+    }
+    
+    .sidebar-admin [data-flux-brand] .flex,
+    .sidebar-admin [data-flux-sidebar-brand] .flex {
+        /* Prevent the icon box text from being overwritten if needed */
+    }
+</style>
     </body>
 </html>

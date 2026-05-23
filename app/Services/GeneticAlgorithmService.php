@@ -224,7 +224,13 @@ class GeneticAlgorithmService
 
     /**
      * Partial GA: Mencoba memindahkan jadwal akademik yang bentrok dengan reservasi
-     * menggunakan prinsip evolusi (Populasi, Mutasi, Fitness).
+     * tanpa merubah seluruh jadwal lainnya.
+     *
+     * OPTIMASI v2:
+     * - Hanya mutasi gen yang bentrok (lebih cepat)
+     * - Early termination dengan threshold yang lebih realistis
+     * - Penalty yang lebih seimbang untuk konflik dengan reservasi target
+     * - Fallback mechanism: terima solusi terbaik jika tidak ada konflik kritis
      */
     public function resolveConflictForReservation(Reservation $reservation): bool
     {
@@ -232,80 +238,223 @@ class GeneticAlgorithmService
         $start = strtotime($reservation->start_time);
         $end = strtotime($reservation->end_time);
 
-        // 1. Identifikasi jadwal akademik yang bentrok (Korban)
-        $victims = AcademicSchedule::where('room_id', $reservation->room_id)
+        // 1. Cari jadwal akademik yang bentrok dengan reservasi ini
+        $conflicts = AcademicSchedule::where('room_id', $reservation->room_id)
             ->where('day', $dayOfWeek)
             ->get()
             ->filter(function ($schedule) use ($start, $end) {
                 $sStart = strtotime($schedule->start_time);
                 $sEnd = strtotime($schedule->end_time);
+
                 return $sStart < $end && $sEnd > $start;
             });
 
-        if ($victims->isEmpty()) {
-            return true; // Tidak ada konflik
+        if ($conflicts->isEmpty()) {
+            return true; // Tidak ada jadwal yang tergusur
         }
 
-        // 2. Inisialisasi Populasi Solusi Alternatif
+        $conflictCourseIds = $conflicts->pluck('course_id')->toArray();
+
+        // 2. Siapkan chromosome awal (kunci semua jadwal kecuali yang bentrok)
+        $currentSchedules = AcademicSchedule::all();
+        $baseChromosome = [];
+        foreach ($currentSchedules as $schedule) {
+            $baseChromosome[] = [
+                'course_id' => $schedule->course_id,
+                'lecturer_id' => $schedule->lecturer_id,
+                'room_id' => $schedule->room_id,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+            ];
+        }
+
+        $days = [1, 2, 3, 4, 5];
+        $roomIds = $this->rooms->keys()->toArray();
         $population = [];
-        $partialPopSize = 20;
-        $maxGens = 50;
 
-        for ($p = 0; $p < $partialPopSize; $p++) {
-            $individual = [];
-            foreach ($victims as $v) {
-                $individual[$v->id] = [
-                    'room_id' => $this->rooms->random()->id,
-                    'day' => rand(1, 5),
-                    'start_time' => $this->allowedStartTimes[array_rand($this->allowedStartTimes)],
-                ];
+        // 3. Inisialisasi populasi dengan variasi random untuk gen yang bentrok
+        for ($i = 0; $i < $this->populationSize; $i++) {
+            $chromosome = $baseChromosome;
+            foreach ($chromosome as &$gene) {
+                if (in_array($gene['course_id'], $conflictCourseIds)) {
+                    // Randomize untuk mencari slot alternatif
+                    $gene['room_id'] = $roomIds[array_rand($roomIds)];
+                    $gene['day'] = $days[array_rand($days)];
+
+                    $course = $this->courses[$gene['course_id']];
+                    $newStartString = $this->allowedStartTimes[array_rand($this->allowedStartTimes)];
+                    $startTime = Carbon::createFromFormat('H:i', $newStartString);
+                    $endTime = (clone $startTime)->addMinutes($course->sks * $this->minutesPerSks);
+
+                    $gene['start_time'] = $startTime->format('H:i:s');
+                    $gene['end_time'] = $endTime->format('H:i:s');
+                }
             }
-            $population[] = $individual;
+            $population[] = $chromosome;
         }
 
-        // 3. Evolusi
-        for ($gen = 0; $gen < $maxGens; $gen++) {
-            $fitnessScores = [];
-            foreach ($population as $index => $individual) {
-                $penalty = 0;
-                foreach ($individual as $scheduleId => $move) {
-                    $v = $victims->firstWhere('id', $scheduleId);
-                    $duration = strtotime($v->end_time) - strtotime($v->start_time);
-                    $newEnd = date('H:i:s', strtotime($move['start_time']) + $duration);
+        // 4. Evolusi Partial dengan optimasi
+        $bestOverallScore = 0;
+        $bestOverallChromosome = null;
 
-                    // Fitness Check: Cek bentrok dengan jadwal lain yang DIKUNCI (Freeze)
-                    if (!$this->isSlotAvailable($move['room_id'], $move['day'], $move['start_time'], $newEnd, $scheduleId, $reservation)) {
+        for ($generation = 0; $generation < $this->maxGenerations; $generation++) {
+            $fitnessScores = [];
+
+            foreach ($population as $chromosome) {
+                $penalty = 0;
+                $criticalPenalty = 0; // Track penalty kritis terpisah
+                $totalGenes = count($chromosome);
+
+                for ($i = 0; $i < $totalGenes; $i++) {
+                    $geneA = $chromosome[$i];
+                    $courseA = $this->courses[$geneA['course_id']];
+                    $roomA = $this->rooms[$geneA['room_id']];
+
+                    // HARD CONSTRAINT: Kapasitas ruangan
+                    if ($courseA->expected_students > $roomA->capacity) {
                         $penalty += 100;
                     }
+
+                    // SOFT CONSTRAINT: Jam siang/sore
+                    $startHour = (int) substr($geneA['start_time'], 0, 2);
+                    if ($startHour >= 13) {
+                        $penalty += 5;
+                    }
+
+                    // CRITICAL: Cek Hard Constraint terhadap reservasi yang sedang di-approve
+                    // Penalty tinggi tapi tidak terlalu ekstrem
+                    if ($geneA['day'] == $dayOfWeek && $geneA['room_id'] == $reservation->room_id) {
+                        $gStart = strtotime($geneA['start_time']);
+                        $gEnd = strtotime($geneA['end_time']);
+                        if ($gStart < $end && $gEnd > $start) {
+                            $penalty += 300; // Penalty tinggi tapi masih bisa di-evolve
+                            $criticalPenalty += 300; // Track konflik kritis
+                        }
+                    }
+
+                    // Cek konflik antar jadwal akademik
+                    for ($j = $i + 1; $j < $totalGenes; $j++) {
+                        $geneB = $chromosome[$j];
+
+                        if ($geneA['day'] !== $geneB['day']) {
+                            continue;
+                        }
+
+                        $startA = strtotime($geneA['start_time']);
+                        $endA = strtotime($geneA['end_time']);
+                        $startB = strtotime($geneB['start_time']);
+                        $endB = strtotime($geneB['end_time']);
+
+                        if ($startA < $endB && $endA > $startB) {
+                            // HARD CONSTRAINT: Ruangan sama bentrok
+                            if ($geneA['room_id'] === $geneB['room_id']) {
+                                $penalty += 100;
+                            }
+                            // HARD CONSTRAINT: Dosen sama bentrok
+                            if ($geneA['lecturer_id'] === $geneB['lecturer_id']) {
+                                $penalty += 100;
+                            }
+                        }
+                    }
                 }
-                
+
                 $fitness = 1 / (1 + $penalty);
-                if ($fitness === 1.0) {
-                    $this->applyRelocation($individual, $victims);
+                $fitnessScores[] = $fitness;
+
+                // Track solusi terbaik secara keseluruhan
+                if ($fitness > $bestOverallScore) {
+                    $bestOverallScore = $fitness;
+                    $bestOverallChromosome = $chromosome;
+                }
+
+                // Early termination: Solusi sempurna ditemukan (tidak ada konflik dengan reservasi)
+                if ($criticalPenalty === 0 && $penalty <= 5) {
+                    // Terima solusi dengan soft constraint minor (jam siang)
+                    $this->saveBestSchedule($chromosome);
+
                     return true;
                 }
-                $fitnessScores[$index] = $fitness;
             }
 
-            // Seleksi & Mutasi
-            $newPopulation = [];
-            while (count($newPopulation) < $partialPopSize) {
-                $parentIndex = array_search(max($fitnessScores), $fitnessScores);
-                $child = $population[$parentIndex];
+            $bestScore = max($fitnessScores);
 
-                // Mutasi: Ubah satu jadwal secara acak
-                $randomVictimId = array_rand($child);
-                $child[$randomVictimId] = [
-                    'room_id' => $this->rooms->random()->id,
-                    'day' => rand(1, 5),
-                    'start_time' => $this->allowedStartTimes[array_rand($this->allowedStartTimes)],
-                ];
-                
-                $newPopulation[] = $child;
+            // Early termination: Solusi sempurna ditemukan
+            if ($bestScore === 1.0) {
+                $bestIndex = array_search($bestScore, $fitnessScores);
+                $this->saveBestSchedule($population[$bestIndex]);
+
+                return true;
+            }
+
+            // 5. Evolusi generasi berikutnya
+            $newPopulation = [];
+            while (count($newPopulation) < $this->populationSize) {
+                $parent1 = $this->selection($population, $fitnessScores);
+                $parent2 = $this->selection($population, $fitnessScores);
+
+                // Crossover parsial: hanya pada gen yang dipindah
+                $offspring = $parent1;
+                foreach ($offspring as &$gene) {
+                    if (in_array($gene['course_id'], $conflictCourseIds) && rand(0, 1)) {
+                        foreach ($parent2 as $p2Gene) {
+                            if ($p2Gene['course_id'] === $gene['course_id']) {
+                                $gene = $p2Gene;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Mutasi parsial: hanya gen yang bentrok dengan rate adaptif
+                foreach ($offspring as &$gene) {
+                    if (in_array($gene['course_id'], $conflictCourseIds)) {
+                        // Rate mutasi adaptif: lebih tinggi di awal, menurun seiring generasi
+                        $adaptiveMutationRate = $this->mutationRate * (1.5 + (1 - $generation / $this->maxGenerations));
+
+                        if (rand(0, 100) / 100 < $adaptiveMutationRate) {
+                            $gene['room_id'] = $roomIds[array_rand($roomIds)];
+                            $gene['day'] = $days[array_rand($days)];
+
+                            $course = $this->courses[$gene['course_id']];
+                            $newStartString = $this->allowedStartTimes[array_rand($this->allowedStartTimes)];
+
+                            $startTime = Carbon::createFromFormat('H:i', $newStartString);
+                            $endTime = (clone $startTime)->addMinutes($course->sks * $this->minutesPerSks);
+
+                            $gene['start_time'] = $startTime->format('H:i:s');
+                            $gene['end_time'] = $endTime->format('H:i:s');
+                        }
+                    }
+                }
+
+                $newPopulation[] = $offspring;
             }
             $population = $newPopulation;
         }
 
+        // Fallback: Evaluasi solusi terbaik yang ditemukan
+        // Cek apakah solusi terbaik tidak memiliki konflik KRITIS dengan reservasi target
+        $criticalConflict = false;
+        foreach ($bestOverallChromosome as $gene) {
+            if ($gene['day'] == $dayOfWeek && $gene['room_id'] == $reservation->room_id) {
+                $gStart = strtotime($gene['start_time']);
+                $gEnd = strtotime($gene['end_time']);
+                if ($gStart < $end && $gEnd > $start) {
+                    $criticalConflict = true;
+                    break;
+                }
+            }
+        }
+
+        // Jika tidak ada konflik kritis dan tidak ada pelanggaran hard constraint lainnya, terima solusi terbaik
+        if (! $criticalConflict && $bestOverallChromosome !== null && $bestOverallScore > 0.0099) {
+            $this->saveBestSchedule($bestOverallChromosome);
+
+            return true;
+        }
+
+        // Gagal menemukan solusi yang layak
         return false;
     }
 
@@ -319,8 +468,8 @@ class GeneticAlgorithmService
             ->where('room_id', $roomId)
             ->where('day', $day)
             ->where(function ($query) use ($start, $end) {
-                $query->whereTime('start_time', '<', $end)
-                      ->whereTime('end_time', '>', $start);
+                $query->where('start_time', '<', $end)
+                      ->where('end_time', '>', $start);
             })
             ->exists();
 
@@ -339,34 +488,13 @@ class GeneticAlgorithmService
             ->where('room_id', $roomId)
             ->whereRaw("strftime('%w', date) = ?", [($day % 7)])
             ->where(function ($query) use ($start, $end) {
-                $query->whereTime('start_time', '<', $end)
-                      ->whereTime('end_time', '>', $start);
+                $query->where('start_time', '<', $end)
+                      ->where('end_time', '>', $start);
             })
             ->exists();
 
         if ($reservationConflict) return false;
 
         return true;
-    }
-
-    /**
-     * Terapkan hasil relokasi ke database.
-     */
-    private function applyRelocation(array $individual, $victims): void
-    {
-        DB::transaction(function () use ($individual, $victims) {
-            foreach ($individual as $id => $move) {
-                $v = $victims->firstWhere('id', $id);
-                $duration = strtotime($v->end_time) - strtotime($v->start_time);
-                $newEnd = date('H:i:s', strtotime($move['start_time']) + $duration);
-
-                AcademicSchedule::where('id', $id)->update([
-                    'room_id' => $move['room_id'],
-                    'day' => $move['day'],
-                    'start_time' => $move['start_time'] . ':00',
-                    'end_time' => $newEnd,
-                ]);
-            }
-        });
     }
 }

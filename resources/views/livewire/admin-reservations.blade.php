@@ -77,7 +77,7 @@ new class extends Component {
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Manajemen Reservasi</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Persetujuan Reservasi</flux:heading>
             <flux:subheading>Setujui atau tolak pengajuan peminjaman ruangan dari mahasiswa/dosen.</flux:subheading>
         </div>
 
@@ -92,9 +92,15 @@ new class extends Component {
         </div>
     </div>
 
-    <flux:separator variant="subtle" />
-
-    <flux:table>
+    <div class="bg-white border border-blue-100 shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-0.5">
+        <div class="bg-gradient-to-r from-blue-600 via-blue-500 to-violet-500 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-bold text-white text-lg flex items-center gap-2">
+                <flux:icon.calendar class="text-white/80" />
+                Daftar Reservasi
+            </h3>
+        </div>
+        <div class="p-2 sm:p-4 overflow-x-auto">
+            <flux:table>
         {{-- FIX ERROR: Ubah <flux:columns> menjadi <flux:table.columns> --}}
                 <flux:table.columns>
                     <flux:table.column>Pemohon</flux:table.column>
@@ -108,7 +114,7 @@ new class extends Component {
                 {{-- FIX ERROR: Ubah <flux:rows> menjadi <flux:table.rows> --}}
                         <flux:table.rows>
                             @forelse ($reservations as $reservation)
-                                <flux:table.row>
+                                <flux:table.row class="transition-colors duration-200 hover:bg-blue-50/50">
                                     <flux:table.cell>
                                         <div class="font-medium text-neutral-800">{{ $reservation->user->name }}</div>
                                         <div class="text-xs text-neutral-500">{{ $reservation->user->email }}</div>
@@ -144,16 +150,17 @@ new class extends Component {
                                     <flux:table.cell>
                                         @if ($reservation->status === 'pending')
                                             <div class="flex gap-2">
-                                                <flux:button variant="ghost" size="sm"
-                                                    class="text-green-600 hover:text-green-700"
+                                                <button 
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
                                                     wire:click="approve({{ $reservation->id }})"
                                                     wire:confirm="Setujui reservasi ini?">
                                                     Setujui
-                                                </flux:button>
-                                                <flux:button variant="ghost" size="sm" class="text-red-600 hover:text-red-700"
+                                                </button>
+                                                <button 
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 border border-transparent rounded-lg shadow-sm bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-1"
                                                     wire:click="openRejectModal({{ $reservation->id }})">
                                                     Tolak
-                                                </flux:button>
+                                                </button>
                                             </div>
                                         @else
                                             <span class="text-xs text-neutral-400 italic">Selesai</span>
@@ -168,11 +175,11 @@ new class extends Component {
                                 </flux:table.row>
                             @endforelse
                         </flux:table.rows>
-    </flux:table>
-
-    {{-- Render Paginasi --}}
-    <div class="mt-4">
-        {{ $reservations->links() }}
+            </flux:table>
+        </div>
+        <div class="p-4 border-t border-blue-100 bg-slate-50/50">
+            {{ $reservations->links() }}
+        </div>
     </div>
 
     <flux:modal name="reject-modal" class="md:w-[450px]">

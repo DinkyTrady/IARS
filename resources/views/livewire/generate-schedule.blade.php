@@ -5,6 +5,7 @@ use App\Models\AcademicSchedule;
 use App\Models\Course;
 use App\Models\Room;
 use Livewire\Volt\Component;
+use Livewire\Attributes\Computed;
 use Flux\Flux;
 
 new class extends Component {
@@ -13,7 +14,8 @@ new class extends Component {
     /**
      * Data requirements check sebelum generate.
      */
-    public function getReadyToGenerateProperty(): bool
+    #[Computed]
+    public function readyToGenerate(): bool
     {
         return Course::count() > 0 && Room::where('status', 'available')->count() > 0;
     }
@@ -80,7 +82,7 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Optimasi Jadwal Akademik</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Optimasi Jadwal (Genetic Algorithm)</flux:heading>
             <flux:subheading>Gunakan Genetic Algorithm untuk menyusun jadwal kuliah tanpa konflik ruangan dan dosen.
             </flux:subheading>
         </div>
@@ -94,14 +96,14 @@ new class extends Component {
                 </flux:button>
             @endif
             <flux:button variant="primary" wire:click="generate" :loading="$isGenerating" icon="cpu-chip"
-                :disabled="!$readyToGenerate || $isGenerating">
+                :disabled="!$this->readyToGenerate || $isGenerating">
                 {{ $isGenerating ? 'Sedang Generate...' : 'Generate Jadwal Baru' }}
             </flux:button>
         </div>
     </header>
 
     {{-- Prerequisite Info --}}
-    @if(!$readyToGenerate)
+    @if(!$this->readyToGenerate)
         <flux:callout variant="warning" icon="exclamation-triangle">
             <flux:callout.heading>Data Belum Lengkap</flux:callout.heading>
             <flux:callout.text>
@@ -134,7 +136,8 @@ new class extends Component {
             <flux:subheading>Klik tombol "Generate Jadwal Baru" untuk memulai optimasi ruangan dan waktu.</flux:subheading>
         </div>
     @else
-        {{-- Summary --}}
+        <flux:card class="p-6 border border-zinc-200 shadow-sm space-y-6">
+            {{-- Summary --}}
         <div class="flex items-center justify-between">
             <flux:text class="text-sm text-neutral-500">
                 Total: <strong>{{ $schedules->count() }} sesi</strong> untuk {{ $schedules->groupBy('course_id')->count() }} mata kuliah
@@ -210,6 +213,7 @@ new class extends Component {
                     </div>
                 </div>
             @endfor
-        </div>
+            </div>
+        </flux:card>
     @endif
 </div>
