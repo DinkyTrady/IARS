@@ -82,7 +82,7 @@ new class extends Component {
 <div class="space-y-6">
     <header class="flex flex-col sm:flex-row justify-between sm:items-end gap-4">
         <div>
-            <flux:heading size="xl">Optimasi Jadwal Akademik</flux:heading>
+            <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Optimasi Jadwal (Genetic Algorithm)</flux:heading>
             <flux:subheading>Gunakan Genetic Algorithm untuk menyusun jadwal kuliah tanpa konflik ruangan dan dosen.
             </flux:subheading>
         </div>
@@ -136,7 +136,8 @@ new class extends Component {
             <flux:subheading>Klik tombol "Generate Jadwal Baru" untuk memulai optimasi ruangan dan waktu.</flux:subheading>
         </div>
     @else
-        {{-- Summary --}}
+        <flux:card class="p-6 border border-zinc-200 shadow-sm space-y-6">
+            {{-- Summary --}}
         <div class="flex items-center justify-between">
             <flux:text class="text-sm text-neutral-500">
                 Total: <strong>{{ $schedules->count() }} sesi</strong> untuk {{ $schedules->groupBy('course_id')->count() }} mata kuliah
@@ -212,6 +213,7 @@ new class extends Component {
                     </div>
                 </div>
             @endfor
-        </div>
+            </div>
+        </flux:card>
     @endif
 </div>

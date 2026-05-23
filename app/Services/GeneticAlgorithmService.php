@@ -225,7 +225,7 @@ class GeneticAlgorithmService
     /**
      * Partial GA: Mencoba memindahkan jadwal akademik yang bentrok dengan reservasi
      * tanpa merubah seluruh jadwal lainnya.
-     * 
+     *
      * OPTIMASI v2:
      * - Hanya mutasi gen yang bentrok (lebih cepat)
      * - Early termination dengan threshold yang lebih realistis
@@ -297,10 +297,10 @@ class GeneticAlgorithmService
         // 4. Evolusi Partial dengan optimasi
         $bestOverallScore = 0;
         $bestOverallChromosome = null;
-        
+
         for ($generation = 0; $generation < $this->maxGenerations; $generation++) {
             $fitnessScores = [];
-            
+
             foreach ($population as $chromosome) {
                 $penalty = 0;
                 $criticalPenalty = 0; // Track penalty kritis terpisah
@@ -358,30 +358,32 @@ class GeneticAlgorithmService
                         }
                     }
                 }
-                
+
                 $fitness = 1 / (1 + $penalty);
                 $fitnessScores[] = $fitness;
-                
+
                 // Track solusi terbaik secara keseluruhan
                 if ($fitness > $bestOverallScore) {
                     $bestOverallScore = $fitness;
                     $bestOverallChromosome = $chromosome;
                 }
-                
+
                 // Early termination: Solusi sempurna ditemukan (tidak ada konflik dengan reservasi)
                 if ($criticalPenalty === 0 && $penalty <= 5) {
                     // Terima solusi dengan soft constraint minor (jam siang)
                     $this->saveBestSchedule($chromosome);
+
                     return true;
                 }
             }
 
             $bestScore = max($fitnessScores);
-            
+
             // Early termination: Solusi sempurna ditemukan
             if ($bestScore === 1.0) {
                 $bestIndex = array_search($bestScore, $fitnessScores);
                 $this->saveBestSchedule($population[$bestIndex]);
+
                 return true;
             }
 
@@ -409,13 +411,14 @@ class GeneticAlgorithmService
                     if (in_array($gene['course_id'], $conflictCourseIds)) {
                         // Rate mutasi adaptif: lebih tinggi di awal, menurun seiring generasi
                         $adaptiveMutationRate = $this->mutationRate * (1.5 + (1 - $generation / $this->maxGenerations));
-                        
+
                         if (rand(0, 100) / 100 < $adaptiveMutationRate) {
                             $gene['room_id'] = $roomIds[array_rand($roomIds)];
                             $gene['day'] = $days[array_rand($days)];
 
                             $course = $this->courses[$gene['course_id']];
                             $newStartString = $this->allowedStartTimes[array_rand($this->allowedStartTimes)];
+
                             $startTime = Carbon::createFromFormat('H:i', $newStartString);
                             $endTime = (clone $startTime)->addMinutes($course->sks * $this->minutesPerSks);
 
@@ -444,13 +447,54 @@ class GeneticAlgorithmService
             }
         }
 
-        // Jika tidak ada konflik kritis, terima solusi terbaik
-        if (!$criticalConflict && $bestOverallChromosome !== null) {
+        // Jika tidak ada konflik kritis dan tidak ada pelanggaran hard constraint lainnya, terima solusi terbaik
+        if (! $criticalConflict && $bestOverallChromosome !== null && $bestOverallScore > 0.0099) {
             $this->saveBestSchedule($bestOverallChromosome);
+
             return true;
         }
 
         // Gagal menemukan solusi yang layak
         return false;
+    }
+
+    /**
+     * Check if a specific slot is available (No conflict with Academic Schedules or Approved Reservations).
+     */
+    private function isSlotAvailable(int $roomId, int $day, string $start, string $end, int $excludeScheduleId, Reservation $currentReservation): bool
+    {
+        // Check Academic Schedule conflict (Freeze others)
+        $academicConflict = AcademicSchedule::where('id', '!=', $excludeScheduleId)
+            ->where('room_id', $roomId)
+            ->where('day', $day)
+            ->where(function ($query) use ($start, $end) {
+                $query->where('start_time', '<', $end)
+                      ->where('end_time', '>', $start);
+            })
+            ->exists();
+
+        if ($academicConflict) return false;
+
+        // Check against the current reservation (if it's the same day/room)
+        $currentResDay = Carbon::parse($currentReservation->date)->dayOfWeekIso;
+        if ($roomId === $currentReservation->room_id && $day === $currentResDay) {
+            if ($start < $currentReservation->end_time && $end > $currentReservation->start_time) {
+                return false;
+            }
+        }
+
+        // Check against other approved reservations
+        $reservationConflict = Reservation::where('status', 'approved')
+            ->where('room_id', $roomId)
+            ->whereRaw("strftime('%w', date) = ?", [($day % 7)])
+            ->where(function ($query) use ($start, $end) {
+                $query->where('start_time', '<', $end)
+                      ->where('end_time', '>', $start);
+            })
+            ->exists();
+
+        if ($reservationConflict) return false;
+
+        return true;
     }
 }
