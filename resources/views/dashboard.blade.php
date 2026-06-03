@@ -4,11 +4,14 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 @if(auth()->user()->role === 'admin')
-                    <h1 class="text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">
+                    <h1
+                        class="text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">
                         Selamat Datang, <span class="text-blue-700 font-black">{{ auth()->user()->name }}</span>
                     </h1>
                 @else
-                    <flux:heading size="xl" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Selamat Datang, {{ auth()->user()->name }}!</flux:heading>
+                    <flux:heading size="xl"
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600 font-bold">Selamat
+                        Datang, {{ auth()->user()->name }}!</flux:heading>
                 @endif
                 <flux:subheading>
                     @if(auth()->user()->role === 'admin')
@@ -29,12 +32,26 @@
         @if(auth()->user()->role === 'admin')
             <livewire:admin-dashboard-stats />
             <flux:separator variant="subtle" />
+        @else
+            {{-- Stats Cards (User Only) --}}
+            <livewire:user-dashboard-stats />
+            <flux:separator variant="subtle" />
         @endif
 
-        {{-- Room List --}}
-        <div class="flex-1 overflow-y-auto">
+        {{-- Main Content Area --}}
+        <div class="flex-1 overflow-y-auto space-y-8">
             @if(auth()->user()->role !== 'admin')
-                <livewire:room-list />
+                <livewire:user-recent-reservations />
+
+                <flux:separator variant="subtle" />
+
+                <!-- <div>
+                        <div class="mb-4">
+                            <flux:heading size="lg">Eksplorasi Ruangan Tersedia</flux:heading>
+                            <flux:subheading>Daftar ruangan yang dapat Anda reservasi saat ini.</flux:subheading>
+                        </div>
+                        <livewire:room-list />
+                    </div> -->
             @else
                 <livewire:admin-recent-reservations />
             @endif

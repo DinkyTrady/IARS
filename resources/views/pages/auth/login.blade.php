@@ -1,58 +1,73 @@
 <x-layouts::auth :title="__('Log in')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
+    <div class="flex flex-col gap-8 w-full max-w-md mx-auto">
+        <div class="text-left space-y-2 mb-2">
+            <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Selamat Datang Kembali</h1>
+            <p class="text-zinc-500 dark:text-zinc-400 font-medium text-sm">Silakan masuk menggunakan email dan kata sandi Anda</p>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
+        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5">
             @csrf
 
             <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autofocus
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+            <div class="space-y-1.5">
+                <label for="email" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Email Address</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    </div>
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="name@example.com"
+                        class="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                    >
+                </div>
+                @error('email')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
 
             <!-- Password -->
-            <div class="relative">
-                <flux:input
-                    name="password"
-                    :label="__('Password')"
-                    type="password"
-                    required
-                    autocomplete="current-password"
-                    :placeholder="__('Password')"
-                    viewable
-                />
-
-                @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm end-0" :href="route('password.request')" wire:navigate>
-                        {{ __('Forgot your password?') }}
-                    </flux:link>
-                @endif
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label for="password" class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Password</label>
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" wire:navigate class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 transition-colors">
+                            Lupa kata sandi?
+                        </a>
+                    @endif
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+                        class="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 dark:focus:ring-blue-500 transition-all duration-200 shadow-sm"
+                    >
+                </div>
+                @error('password')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- Remember Me -->
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
-
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
-                    {{ __('Log in') }}
-                </flux:button>
+            <div class="flex items-center mt-1">
+                <input id="remember" type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-zinc-300 dark:border-zinc-700 rounded cursor-pointer dark:bg-zinc-900">
+                <label for="remember" class="ml-2 block text-sm text-zinc-600 dark:text-zinc-400 cursor-pointer">
+                    Ingat saya
+                </label>
             </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="mt-2 w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all duration-200 active:scale-[0.98]">
+                Masuk ke Sistem
+            </button>
         </form>
 
         @if (Route::has('register'))
-            <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
-                <span>{{ __('Don\'t have an account?') }}</span>
-                <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
+            <div class="text-center text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+                Belum punya akun?
+                <a href="{{ route('register') }}" wire:navigate class="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-500 transition-colors">Daftar sekarang</a>
             </div>
         @endif
     </div>

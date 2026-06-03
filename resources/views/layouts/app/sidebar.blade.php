@@ -4,7 +4,7 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white">
-        <flux:sidebar sticky collapsible class="bg-zinc-800 border-e border-zinc-800 text-zinc-100">
+        <flux:sidebar sticky collapsible class="bg-zinc-50 border-e border-zinc-200">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
@@ -137,17 +137,17 @@
     /* Flux biasanya me-render ini sebagai elemen yang memiliki atribut data-flux-sidebar-item */
     [data-flux-sidebar-item], 
     flux\:sidebar\.item {
-        color: #94a3b8 !important; /* slate-400 */
+        color: #475569 !important; /* slate-600 */
         margin-bottom: 2px !important;
         transition: all 0.2s ease-in-out !important;
         display: flex; /* Memastikan padding/background terisi penuh */
     }
     
-    /* 2. Hover Effect - Abu-abu terang agar kontras dengan bg-zinc-800 */
+    /* 2. Hover Effect - Terang agar kontras dengan bg-zinc-50 */
     [data-flux-sidebar-item]:hover,
     flux\:sidebar\.item:hover {
-        background-color: #4b5563 !important; /* gray-600 atau gunakan #3f3f46 untuk zinc-700 */
-        color: #ffffff !important;
+        background-color: #e2e8f0 !important; /* slate-200 */
+        color: #0f172a !important;
         transform: translateX(4px);
         border-radius: 8px;
     }
@@ -162,7 +162,7 @@
     /* 4. Perbaikan Heading */
     [data-flux-sidebar-group] h2, 
     flux\:sidebar\.group h2 {
-        color: #818cf8 !important; /* indigo-400 agar lebih terbaca di dark mode */
+        color: #4338ca !important; /* indigo-700 agar lebih terbaca di light mode */
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.05em !important;
